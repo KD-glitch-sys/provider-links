@@ -77,7 +77,7 @@
       .fun-fact .fact-actions button:hover { background: #2a2a2a; }
     }
 
-    /* Fireworks overlay canvas */
+    /* Fireworks overlay canvas (transparent overlay) */
     #fx-canvas {
       position: fixed;
       inset: 0;
@@ -85,6 +85,7 @@
       height: 100vh;
       z-index: 999;
       pointer-events: none; /* don't block clicks */
+      background: transparent; /* ensure no background wash */
     }
     @media (prefers-reduced-motion: reduce) {
       #fx-canvas { display: none; }
@@ -159,17 +160,32 @@
     </section>
   </div>
 
-  <!-- Fireworks overlay canvas -->
+  <!-- Fireworks overlay canvas (transparent) -->
   <canvas id="fx-canvas" aria-hidden="true"></canvas>
 
-  <!-- Copy button behavior + local clicks counter -->
+  <!-- Copy button behavior + clicks counter (sessionStorage) -->
   <script>
     (function () {
-      const CLICKS_KEY = 'totalClicks';
-      const getClicks = () => parseInt(localStorage.getItem(CLICKS_KEY) || '0', 10);
-      const setClicks = (n) => localStorage.setItem(CLICKS_KEY, String(n));
-      const updateClicksUI = (n) => { const el = document.getElementById('total-clicks-count'); if (el) el.textContent = n.toLocaleString(); };
-      updateClicksUI(getClicks());
+      const CLICKS_KEY = 'totalClicksSession';
+
+      // Initialize session counter (persist across reloads in this tab)
+      function initClicks() {
+        if (sessionStorage.getItem(CLICKS_KEY) == null) {
+          sessionStorage.setItem(CLICKS_KEY, '0');
+        }
+        updateClicksUI(parseInt(sessionStorage.getItem(CLICKS_KEY), 10));
+      }
+      function getClicks() {
+        return parseInt(sessionStorage.getItem(CLICKS_KEY) || '0', 10);
+      }
+      function setClicks(n) {
+        sessionStorage.setItem(CLICKS_KEY, String(n));
+      }
+      function updateClicksUI(n) {
+        const el = document.getElementById('total-clicks-count');
+        if (el) el.textContent = n.toLocaleString();
+      }
+      initClicks();
 
       function copyToClipboard(text) {
         if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
@@ -191,13 +207,11 @@
         const btn = evt.target.closest('button.copy-btn');
         if (!btn) return;
 
-        // Count every copy button click (local)
+        // Count every copy button click (session-based per tab)
         const current = getClicks() + 1; setClicks(current); updateClicksUI(current);
 
         // 🎆 Fireworks on milestones
-        if (window.__fxMilestoneTrigger) {
-          window.__fxMilestoneTrigger(current);
-        }
+        if (window.__fxMilestoneTrigger) window.__fxMilestoneTrigger(current);
 
         const key = btn.getAttribute('data-copy-key'); if (!key) return;
         revertOtherButtons(btn);
@@ -269,7 +283,7 @@
     })();
   </script>
 
-  <!-- Fireworks Engine (Upward Launch) + Milestones -->
+  <!-- Fireworks Engine (Upward Launch, Transparent Overlay) + Milestones -->
   <script>
     (function () {
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -342,9 +356,9 @@
       }
 
       function loop() {
+        // Transparent overlay: clear only; no dark background
         ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = 'rgba(0,0,0,0.14)';
-        ctx.fillRect(0, 0, W, H);
+        ctx.clearRect(0, 0, W, H);
         ctx.globalCompositeOperation = 'lighter';
 
         for (let i = particles.length - 1; i >= 0; i--) {
@@ -413,7 +427,9 @@
           rafId = requestAnimationFrame(loop);
         } else {
           cancelAnimationFrame(rafId); rafId = null;
-          ctx.globalCompositeOperation = 'source-over'; ctx.clearRect(0, 0, W, H);
+          // keep canvas transparent
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.clearRect(0, 0, W, H);
         }
       }
 
@@ -449,7 +465,6 @@
     /*
       Firebase modular SDK (CDN) — initialize and use Firestore.
       Atomic server-side increment via FieldValue.increment(1).
-      Docs: Add Firebase to web & FieldValue.increment
     */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
