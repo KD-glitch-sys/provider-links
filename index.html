@@ -5,7 +5,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Additional Sections — Names & Addresses</title>
-
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 1.25rem; background: #fff; color: #222; }
     h2 { margin: 0.25rem 0 0.75rem; }
@@ -13,7 +12,6 @@
     .copy-links-table th, .copy-links-table td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; vertical-align: middle; }
     .copy-links-table thead th { background: #f7f7f9; text-align: left; font-weight: 600; }
     .copy-links-table .col-action { width: 160px; text-align: right; }
-
     .copy-btn {
       display: inline-block;
       padding: 0.35rem 0.6rem;
@@ -26,81 +24,84 @@
       font-weight: 400;
       transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
     }
-    .copy-btn:hover, .copy-btn:focus {
-      background: #2c62f2;
-      color: #fff;
-    }
-    .copy-btn.copied {
-      background: #2c62f2 !important;
-      color: #fff !important;
-      border-color: #2c62f2 !important;
-      font-weight: 700; /* bold */
-    }
-    .copy-btn.shake {
-      animation: btn-shake 350ms ease;
-    }
+    .copy-btn:hover, .copy-btn:focus { background: #2c62f2; color: #fff; }
+    .copy-btn.copied { background: #2c62f2 !important; color: #fff !important; border-color: #2c62f2 !important; font-weight: 700; }
+    .copy-btn.shake { animation: btn-shake 350ms ease; }
     @keyframes btn-shake {
-      0%   { transform: translateX(0); }
-      20%  { transform: translateX(-2px); }
-      40%  { transform: translateX(2px); }
-      60%  { transform: translateX(-2px); }
-      80%  { transform: translateX(2px); }
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-2px); }
+      40% { transform: translateX(2px); }
+      60% { transform: translateX(-2px); }
+      80% { transform: translateX(2px); }
       100% { transform: translateX(0); }
     }
-
     .container { max-width: 980px; margin: 0 auto; }
     footer { margin-top: 2rem; font-size: 0.85rem; color: #666; }
+
+    /* Top banner: Assessors Served (global) */
+    .page-views-banner {
+      background: #f7faff;
+      border: 1px solid #dbe6ff;
+      color: #1a3fb0;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+    .page-views-banner small { color: #3553c7; font-weight: 500; }
+
+    /* Total clicks counter block */
+    .metrics { margin: 1rem 0; font-weight: 600; color: #333; }
+
+    /* Fun Fact styles */
+    .fun-fact {
+      text-align: center;
+      margin-top: 3.25rem; /* ≈3–4 spaces below the footer tip */
+      font-size: 1rem;
+      color: #333;
+    }
+    .fun-fact h3 { margin: 0 0 0.5rem; font-weight: 700; }
+    .fun-fact .fact-text { display: inline-block; max-width: 48rem; line-height: 1.5; }
+    .fun-fact .fact-meta { margin-top: 0.5rem; font-size: 0.875rem; color: #666; }
+    .fun-fact .fact-actions { margin-top: 0.5rem; }
+    .fun-fact .fact-actions button {
+      appearance: none; border: 1px solid #ccc; background: #fafafa; color: #222;
+      padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem;
+    }
+    .fun-fact .fact-actions button:hover { background: #f0f0f0; }
+
+    @media (prefers-color-scheme: dark) {
+      .fun-fact { color: #ddd; }
+      .fun-fact .fact-meta { color: #aaa; }
+      .fun-fact .fact-actions button { border-color: #444; background: #1e1e1e; color: #eee; }
+      .fun-fact .fact-actions button:hover { background: #2a2a2a; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
+
+    <!-- Top banner: Assessors Served (GLOBAL via Firebase) -->
+    <div class="page-views-banner" role="status" aria-live="polite">
+      Assessors Served: <span id="page-views-count">—</span>
+      <small id="views-status" aria-hidden="true"></small>
+    </div>
+
     <!-- Additional Sections — Names -->
     <section id="additional-provider-sections" aria-labelledby="additional-provider-sections-title">
       <h2 id="additional-provider-sections-title">Additional Sections — Names</h2>
       <table class="copy-links-table">
         <thead>
-          <tr>
-            <th>Display Name</th>
-            <th>Section Key</th>
-            <th class="col-action">Copy</th>
-          </tr>
+          <tr><th>Display Name</th><th>Section Key</th><th class="col-action">Copy</th></tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Natural Therapies</td>
-            <td><code>Provdetails-name-nat</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-nat">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Dental</td>
-            <td><code>Provdetails-name-dent</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-dent">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Psychology</td>
-            <td><code>Provdetails-name-psy</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-psy">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Speech Therapy</td>
-            <td><code>Provdetails-name-spe</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-spe">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Occupational Therapy</td>
-            <td><code>Provdetails-name-occ</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-occ">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Physio</td>
-            <td><code>Provdetails-name-phy</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-phy">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Other Allied</td>
-            <td><code>Provdetails-name-ali</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-ali">Copy Link</button></td>
-          </tr>
+          <tr><td>Natural Therapies</td><td><code>Provdetails-name-nat</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-nat">Copy Link</button></td></tr>
+          <tr><td>Dental</td><td><code>Provdetails-name-dent</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-dent">Copy Link</button></td></tr>
+          <tr><td>Psychology</td><td><code>Provdetails-name-psy</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-psy">Copy Link</button></td></tr>
+          <tr><td>Speech Therapy</td><td><code>Provdetails-name-spe</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-spe">Copy Link</button></td></tr>
+          <tr><td>Occupational Therapy</td><td><code>Provdetails-name-occ</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-occ">Copy Link</button></td></tr>
+          <tr><td>Physio</td><td><code>Provdetails-name-phy</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-phy">Copy Link</button></td></tr>
+          <tr><td>Other Allied</td><td><code>Provdetails-name-ali</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-name-ali">Copy Link</button></td></tr>
         </tbody>
       </table>
     </section>
@@ -110,126 +111,213 @@
       <h2 id="additional-provider-addresses-title">Additional Sections — Addresses</h2>
       <table class="copy-links-table">
         <thead>
-          <tr>
-            <th>Display Name</th>
-            <th>Section Key</th>
-            <th class="col-action">Copy</th>
-          </tr>
+          <tr><th>Display Name</th><th>Section Key</th><th class="col-action">Copy</th></tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Natural Therapies</td>
-            <td><code>Provdetails-address-nat</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-nat">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Dental</td>
-            <td><code>Provdetails-address-dent</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-dent">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Psychology</td>
-            <td><code>Provdetails-address-psy</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-psy">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Speech Therapy</td>
-            <td><code>Provdetails-address-spe</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-spe">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Occupational Therapy</td>
-            <td><code>Provdetails-address-occ</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-occ">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Physio</td>
-            <td><code>Provdetails-address-phy</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-phy">Copy Link</button></td>
-          </tr>
-          <tr>
-            <td>Other Allied</td>
-            <td><code>Provdetails-address-ali</code></td>
-            <td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-ali">Copy Link</button></td>
-          </tr>
+          <tr><td>Natural Therapies</td><td><code>Provdetails-address-nat</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-nat">Copy Link</button></td></tr>
+          <tr><td>Dental</td><td><code>Provdetails-address-dent</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-dent">Copy Link</button></td></tr>
+          <tr><td>Psychology</td><td><code>Provdetails-address-psy</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-psy">Copy Link</button></td></tr>
+          <tr><td>Speech Therapy</td><td><code>Provdetails-address-spe</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-spe">Copy Link</button></td></tr>
+          <tr><td>Occupational Therapy</td><td><code>Provdetails-address-occ</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-occ">Copy Link</button></td></tr>
+          <tr><td>Physio</td><td><code>Provdetails-address-phy</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-phy">Copy Link</button></td></tr>
+          <tr><td>Other Allied</td><td><code>Provdetails-address-ali</code></td><td class="col-action"><button type="button" class="copy-btn" data-copy-key="Provdetails-address-ali">Copy Link</button></td></tr>
         </tbody>
       </table>
     </section>
 
+    <!-- Total clicks counter (between last table and the footer) -->
+    <div class="metrics" role="status" aria-live="polite">
+      Total clicks: <span id="total-clicks-count">0</span>
+    </div>
+
     <footer>
       <p>Tip: Click any button to copy exactly the section key shown in the middle column.</p>
     </footer>
+
+    <!-- Fun Fact of the Day (3–4 spaces below the footer tip) -->
+    <section class="fun-fact" aria-labelledby="fun-fact-title">
+      <h3 id="fun-fact-title">Fun Fact of the Day</h3>
+      <div class="fact-text" id="fun-fact-text" aria-live="polite">Loading a fun fact…</div>
+      <div class="fact-meta" id="fun-fact-meta" hidden>
+        <span id="fun-fact-source"></span>
+      </div>
+      <div class="fact-actions">
+        <button type="button" id="fun-fact-refresh" aria-label="Get a new fun fact">🔄 Refresh fact</button>
+      </div>
+    </section>
   </div>
 
+  <!-- Copy button behavior + local clicks counter -->
   <script>
     (function () {
-      function copyToClipboard(text) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          return navigator.clipboard.writeText(text);
-        } else {
-          const ta = document.createElement('textarea');
-          ta.value = text;
-          ta.setAttribute('readonly', '');
-          ta.style.position = 'absolute';
-          ta.style.left = '-9999px';
-          document.body.appendChild(ta);
-          ta.select();
-          try { document.execCommand('copy'); } catch (e) {}
-          document.body.removeChild(ta);
-          return Promise.resolve();
-        }
-      }
+      const CLICKS_KEY = 'totalClicks';
+      const getClicks = () => parseInt(localStorage.getItem(CLICKS_KEY) || '0', 10);
+      const setClicks = (n) => localStorage.setItem(CLICKS_KEY, String(n));
+      const updateClicksUI = (n) => { const el = document.getElementById('total-clicks-count'); if (el) el.textContent = n.toLocaleString(); };
+      updateClicksUI(getClicks());
 
+      function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+        const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+        ta.style.position = 'absolute'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta); return Promise.resolve();
+      }
       function revertButton(btn) {
-        if (!btn) return;
-        clearTimeout(btn._revertTimer);
+        if (!btn) return; clearTimeout(btn._revertTimer);
         btn.textContent = btn.dataset.originalText || 'Copy Link';
         btn.classList.remove('copied', 'shake');
       }
-
       function revertOtherButtons(exceptBtn) {
-        document.querySelectorAll('button.copy-btn.copied, button.copy-btn.shake').forEach((b) => {
-          if (b !== exceptBtn) revertButton(b);
-        });
+        document.querySelectorAll('button.copy-btn.copied, button.copy-btn.shake').forEach((b) => { if (b !== exceptBtn) revertButton(b); });
       }
 
       document.addEventListener('click', function (evt) {
         const btn = evt.target.closest('button.copy-btn');
         if (!btn) return;
+        // Count every copy button click (local)
+        const current = getClicks() + 1; setClicks(current); updateClicksUI(current);
 
-        const key = btn.getAttribute('data-copy-key');
-        if (!key) return;
-
+        const key = btn.getAttribute('data-copy-key'); if (!key) return;
         revertOtherButtons(btn);
-
-        copyToClipboard(key)
-          .then(() => {
-            const originalText = btn.dataset.originalText || btn.textContent;
-            btn.dataset.originalText = originalText;
-
-            btn.textContent = 'Copied!';
-            btn.classList.add('copied');
-
-            // Restart shake reliably
-            btn.classList.remove('shake');
-            void btn.offsetWidth; // force reflow
-            btn.classList.add('shake');
-
-            btn.addEventListener('animationend', function handleEnd() {
-              btn.classList.remove('shake');
-              btn.removeEventListener('animationend', handleEnd);
-            });
-
-            clearTimeout(btn._revertTimer);
-            btn._revertTimer = setTimeout(() => {
-              revertButton(btn);
-            }, 10000);
-          })
-          .catch(() => {
-            // Optional: handle copy failure
-          });
+        copyToClipboard(key).then(() => {
+          const originalText = btn.dataset.originalText || btn.textContent;
+          btn.dataset.originalText = originalText; btn.textContent = 'Copied!'; btn.classList.add('copied');
+          btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+          btn.addEventListener('animationend', function handleEnd() { btn.classList.remove('shake'); btn.removeEventListener('animationend', handleEnd); });
+          clearTimeout(btn._revertTimer); btn._revertTimer = setTimeout(() => revertButton(btn), 10000);
+        }).catch(() => {});
       }, false);
     })();
   </script>
+
+  <!-- Fun Fact: daily fetch + local fallback and caching -->
+  <script>
+    (function () {
+      function todayKey() { const d = new Date(); try { return d.toLocaleDateString('en-CA'); } catch { return d.toISOString().slice(0, 10); } }
+      function pickLocalFactForDate(dateStr, facts) { let hash = 0; for (let i = 0; i < dateStr.length; i++) { hash = (hash * 31 + dateStr.charCodeAt(i)) >>> 0; } return facts[hash % facts.length]; }
+      const LOCAL_FUN_FACTS = [
+        "Honey never spoils—archaeologists have found edible honey in ancient Egyptian tombs.",
+        "Bananas are berries, but strawberries aren't!",
+        "Octopuses have three hearts and blue blood.",
+        "A day on Venus is longer than a year on Venus.",
+        "Koalas have fingerprints so similar to humans they can confuse crime scene analysts.",
+        "Wombats poop in cubes—yes, really.",
+        "The Eiffel Tower can be 15 cm taller in summer due to heat expansion.",
+        "Sharks existed before trees—by hundreds of millions of years.",
+        "Hot water can freeze faster than cold water (the Mpemba effect).",
+        "There are more possible chess games than atoms in the observable universe."
+      ];
+      const FACT_EL = document.getElementById('fun-fact-text');
+      const META_EL = document.getElementById('fun-fact-meta');
+      const SOURCE_EL = document.getElementById('fun-fact-source');
+      const REFRESH_BTN = document.getElementById('fun-fact-refresh');
+      const LS_KEY_TEXT = 'funFactText'; const LS_KEY_DATE = 'funFactDate'; const LS_KEY_SOURCE = 'funFactSource'; const LS_KEY_LINK = 'funFactLink';
+
+      async function fetchFromWeb() {
+        const resp = await fetch('https://uselessfacts.jsph.pl/random.json?language=en', { cache: 'no-store' });
+        if (!resp.ok) throw new Error('Fact API response not ok');
+        const data = await resp.json();
+        const fact = (data && data.text) ? String(data.text).trim() : '';
+        const source = (data && (data.source || data.source_url || data.permalink)) ? String(data.source || data.source_url || data.permalink) : '';
+        return { fact, source, link: (data && (data.source_url || data.permalink)) ? String(data.source_url || data.permalink) : '' };
+      }
+      function showFact({ fact, source, link }, today) {
+        FACT_EL.textContent = fact;
+        if (source || link) {
+          SOURCE_EL.innerHTML = link ? `Source: ${link}${source || 'Link'}</a>` : `Source: ${source}`;
+          META_EL.hidden = false;
+        } else { META_EL.hidden = true; SOURCE_EL.textContent = ''; }
+        localStorage.setItem(LS_KEY_TEXT, fact); localStorage.setItem(LS_KEY_DATE, today);
+        localStorage.setItem(LS_KEY_SOURCE, source || ''); localStorage.setItem(LS_KEY_LINK, link || '');
+      }
+      async function loadFunFact(forceNew = false) {
+        if (!FACT_EL) return; const today = todayKey();
+        const savedDate = localStorage.getItem(LS_KEY_DATE); const savedText = localStorage.getItem(LS_KEY_TEXT);
+        const savedSource = localStorage.getItem(LS_KEY_SOURCE) || ''; const savedLink = localStorage.getItem(LS_KEY_LINK) || '';
+        if (!forceNew && savedDate === today && savedText) { showFact({ fact: savedText, source: savedSource, link: savedLink }, today); return; }
+        try { const web = await fetchFromWeb(); if (web.fact) { showFact(web, today); return; } throw new Error('Empty fact from web'); }
+        catch (e) { const fallback = pickLocalFactForDate(today, LOCAL_FUN_FACTS); showFact({ fact: fallback, source: '', link: '' }, today); }
+      }
+      if (REFRESH_BTN) { REFRESH_BTN.addEventListener('click', () => { loadFunFact(true); }); }
+      loadFunFact();
+    })();
+  </script>
+
+  <!-- Firebase (Firestore) integration: GLOBAL "Assessors Served" -->
+  <script type="module">
+    // Import Firebase modular SDK via CDN (recommended for simple static sites)
+    // See: Add Firebase to web (setup & initialize)  [4](https://firebase.google.com/docs/web/setup)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, increment
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";  /* Atomic increment: [1](https://docs.cloud.google.com/firestore/docs/samples/firestore-data-set-numeric-increment)[2](https://stackoverflow.com/questions/50762923/how-to-increment-existing-number-field-in-cloud-firestore)[3](https://firebase.google.com/docs/reference/js/v8/firebase.firestore.FieldValue) */
+
+    const firebaseConfig = {
+    apiKey: "AIzaSyAdWZbXTya8eiwaL-pgzxST52MuvyK4aK4",
+    authDomain: "assessorcounterglobal.firebaseapp.com",
+    projectId: "assessorcounterglobal",
+    storageBucket: "assessorcounterglobal.firebasestorage.app",
+    messagingSenderId: "556711246836",
+    appId: "1:556711246836:web:9a3d7bbf8f6878eb3d97a1"
+  };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const viewsEl = document.getElementById('page-views-count');
+    const statusEl = document.getElementById('views-status');
+
+    // A single Firestore document to track global page views
+    const counterRef = doc(db, 'metrics', 'assessorsServed');
+
+    async function ensureCounterExists() {
+      try {
+        const snap = await getDoc(counterRef);
+        if (!snap.exists()) {
+          await setDoc(counterRef, { count: 0 });
+        }
+      } catch (e) {
+        console.warn('Ensure counter failed:', e);
+      }
+    }
+
+    async function incrementGlobal() {
+      try {
+        await updateDoc(counterRef, { count: increment(1) }); // atomic server-side increment  [1](https://docs.cloud.google.com/firestore/docs/samples/firestore-data-set-numeric-increment)
+        statusEl.textContent = ' (global)';
+      } catch (e) {
+        // If doc not found, create with count=1; else fall back to localStorage
+        if (e && e.code === 'not-found') {
+          await setDoc(counterRef, { count: 1 });
+          statusEl.textContent = ' (global)';
+        } else {
+          console.warn('Global increment failed; showing local count.', e);
+          // Fallback to local per-browser count
+          const key = 'pageViewsLocal';
+          const n = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+          localStorage.setItem(key, String(n));
+          viewsEl.textContent = n.toLocaleString();
+          statusEl.textContent = ' (local)';
+        }
+      }
+    }
+
+    // Live updates for all viewers (auto-refresh the banner)
+    onSnapshot(counterRef, (snap) => {
+      const data = snap.data();
+      if (data && typeof data.count === 'number') {
+        viewsEl.textContent = data.count.toLocaleString();
+        if (!statusEl.textContent) statusEl.textContent = ' (global)';
+      }
+    }, (err) => {
+      console.warn('Snapshot listen failed:', err);
+    });
+
+    // Initialize + increment once per page load
+    await ensureCounterExists();
+    await incrementGlobal();
+  </script>
 </body>
 </html>
+``
