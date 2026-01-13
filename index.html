@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,133 +6,134 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Additional Sections — Names & Addresses</title>
   <style>
-    :root {
-      --brand: #2c62f2;
-      --border: #ddd;
-      --bg-head: #f7f7f9;
-      --text: #222;
-    }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 1.25rem; background: #fff; color: var(--text); }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 1.25rem; background: #fff; color: #222; }
     h2 { margin: 0.25rem 0 0.75rem; }
     .copy-links-table { width: 100%; border-collapse: collapse; margin-block: 0.75rem 1.25rem; }
-    .copy-links-table th, .copy-links-table td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; vertical-align: middle; }
-    .copy-links-table thead th { background: var(--bg-head); text-align: left; font-weight: 600; }
-    .copy-links-table .col-action { width: 140px; text-align: right; }
-    .copy-link { display: inline-block; padding: 0.35rem 0.6rem; border: 1px solid var(--brand); color: var(--brand); border-radius: 4px; text-decoration: none; font-size: 0.9rem; }
-    .copy-link:hover, .copy-link:focus { background: var(--brand); color: #fff; }
-    footer { margin-top: 2rem; font-size: 0.85rem; color: #666; }
+    .copy-links-table th, .copy-links-table td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; vertical-align: middle; }
+    .copy-links-table thead th { background: #f7f7f9; text-align: left; font-weight: 600; }
+    .copy-links-table .col-action { width: 160px; text-align: right; }
+
+    /* Toast styles */
+    #copy-toast {
+      position: fixed;
+      left: 50%;
+      top: 1rem;
+      transform: translateX(-50%);
+      background: #1a7f37;  /* success */
+      color: #fff;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      font-size: 0.9rem;
+      display: none;
+      z-index: 9999;
+    }
+    #copy-toast.error { background: #b00020; } /* error */
+    .copy-link {
+      display: inline-block;
+      padding: 0.35rem 0.6rem;
+      border: 1px solid #2c62f2;
+      color: #2c62f2;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .copy-link:hover, .copy-link:focus {
+      background: #2c62f2;
+      color: #fff;
+    }
     .container { max-width: 980px; margin: 0 auto; }
+    footer { margin-top: 2rem; font-size: 0.85rem; color: #666; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- NOTE: The original 'Provider Details' table has been intentionally removed. -->
+  <!-- Toast -->
+  <div id="copy-toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
-    <!-- Additional Sections: Names (Display Name, Section Key, Copy) -->
+  <div class="container">
+    <!-- Additional Sections — Names -->
     <section id="additional-provider-sections" aria-labelledby="additional-provider-sections-title">
       <h2 id="additional-provider-sections-title">Additional Sections — Names</h2>
-
-      <table class="copy-links-table" aria-describedby="additional-provider-sections-title">
+      <table class="copy-links-table">
         <thead>
           <tr>
-            <th scope="col">Display Name</th>
-            <th scope="col">Section Key</th>
-            <th scope="col" class="col-action">Copy</th>
+            <th>Display Name</th>
+            <th>Section Key</th>
+            <th class="col-action">Copy</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Natural Therapies</td>
             <td><code>Provdetails-name-nat</code></td>
-            <td class="col-action">
-              <a href="#Provdetails-name-nat" class="copy-link" data-copy-key="Provdetails-name-nat">Copy Link</a>
-            </td>
+            <td class="col-action">#Provdetails-name-natCopy Link</a></td>
           </tr>
           <tr>
             <td>Dental</td>
             <td><code>Provdetails-name-dent</code></td>
-            <td class="col-action">
-              <a href="#Provdetails-name-dent" class="copy-link" data-copy-key="Provdetails-name-dent">Copy Link</a>
-            </td>
+            <td class="col-action">#Provdetails-name-dentCopy Link</a></td>
           </tr>
           <tr>
-            <td>Optical - no, this is a lie, we don't want optical</td>
-            <td><code>disregard</code></td>
-            <td class="col-action">
-              <a href="disregard" class="copy-link" data-copy-key="why are you copying this">Copy Link</a>
-            </td>
+            <td>Optical</td>
+            <td><code>Provdetails-name-opt</code></td>
+            <td class="col-action">#Provdetails-name-optCopy Link</a></td>
           </tr>
           <tr>
             <td>Physio</td>
             <td><code>Provdetails-name-phy</code></td>
-            <td class="col-action">
-              <a href="#Provdetails-name-phy" class="copy-link" data-copy-key="Provdetails-name-phy">Copy Link</a>
-            </td>
+            <td class="col-action">#Provdetails-name-phyCopy Link</a></td>
           </tr>
           <tr>
             <td>Other Allied</td>
             <td><code>Provdetails-name-ali</code></td>
-            <td class="col-action">
-              <a href="#Provdetails-name-ali" class="copy-link" data-copy-key="Provdetails-name-ali">Copy Link</a>
-            </td>
+            <td class="col-action">#Provdetails-name-aliCopy Link</a></td>
           </tr>
         </tbody>
       </table>
     </section>
 
-    <!-- Additional Sections: Addresses (Display Name, Section Key, Copy) -->
+    <!-- Additional Sections — Addresses -->
     <section id="additional-provider-addresses" aria-labelledby="additional-provider-addresses-title">
       <h2 id="additional-provider-addresses-title">Additional Sections — Addresses</h2>
-
-      <table class="copy-links-table" aria-describedby="additional-provider-addresses-title">
+      <table class="copy-links-table">
         <thead>
           <tr>
-            <th scope="col">Display Name</th>
-            <th scope="col">Section Key</th>
-            <th scope="col" class="col-action">Copy</th>
+            <th>Display Name</th>
+            <th>Section Key</th>
+            <th class="col-action">Copy</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Natural Therapies</td>
             <td><code>Provdetails-address-nat</code></td>
-            <td class="col-action">
-              <a href="#Provdetails-address-nat" class="copy-link" data-copy-key="Provdetails-address-nat">Copy Link</a>
-            </td>
+            <td class="col-action">#Provdetails-address-natCopy Link</a></td>
           </tr>
           <tr>
             <td>Dental</td>
             <td><code>Provdetails-address-dent</code></td>
-            <td class="col-action">
-              <a href="#Provdetails-address-dent" class="copy-link" data-copy-key="Provdetails-address-dent">Copy Link</a>
-            </td>
+            <td class="col-action">#Provdetails-address-dentCopy Link</a></td>
           </tr>
           <tr>
             <td>Optical</td>
             <td><code>Provdetails-address-opt</code></td>
-            <td class="col-action">
-              <a href="#Provdetails-address-opt" class="copy-link" data-copy-key="Provdetails-address-opt">Copy Link</a>
-            </td>
+            <td class="col-action">#Provdetails-address-optCopy Link</a></td>
           </tr>
           <tr>
             <td>Physio</td>
             <td><code>Provdetails-address-phy</code></td>
-            <td class="col-action">
-              <a href="#Provdetails-address-phy" class="copy-link" data-copy-key="Provdetails-address-phy">Copy Link</a>
-            </td>
+            <td class="col-action">#Provdetails-address-phyCopy Link</a></td>
           </tr>
           <tr>
             <td>Other Allied</td>
             <td><code>Provdetails-address-ali</code></td>
-            <td class="col-action">
-              <a href="#Provdetails-address-ali" class="copy-link" data-copy-key="Provdetails-address-ali">Copy Link</a>
-            </td>
+            <td class="col-action">#Provdetails-address-aliCopy Link</a></td>
           </tr>
         </tbody>
       </table>
     </section>
 
-    <!-- Hidden anchors (optional) to match href targets -->
+    <!-- Hidden anchors (optional) -->
     <section id="Provdetails-name-nat" hidden></section>
     <section id="Provdetails-name-dent" hidden></section>
     <section id="Provdetails-name-opt" hidden></section>
@@ -151,6 +153,22 @@
 
   <script>
     (function () {
+      const toast = document.getElementById('copy-toast');
+      let toastTimer = null;
+
+      function showToast(message, isError = false, ttl = 2500) {
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.toggle('error', !!isError);
+        toast.style.display = 'block';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.style.display = 'none';
+          toast.classList.remove('error');
+          toast.textContent = '';
+        }, ttl);
+      }
+
       function copyToClipboard(text) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           return navigator.clipboard.writeText(text);
@@ -176,6 +194,7 @@
         const key = link.getAttribute('data-copy-key');
         const href = link.getAttribute('href') || '';
 
+        // Prefer data-copy-key; fallback to full URL with hash
         const toCopy = key
           ? key
           : (href.startsWith('#')
@@ -183,14 +202,8 @@
               : href);
 
         copyToClipboard(toCopy)
-          .then(() => {
-            link.textContent = 'Copied!';
-            setTimeout(() => (link.textContent = 'Copy Link'), 1500);
-          })
-          .catch(() => {
-            link.textContent = 'Copy failed';
-            setTimeout(() => (link.textContent = 'Copy Link'), 1500);
-          });
+          .then(() => showToast(`Copied: ${toCopy}`, false))
+          .catch(() => showToast('Copy failed', true));
       }, false);
     })();
   </script>
