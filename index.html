@@ -13,13 +13,28 @@
     .copy-links-table thead th { background: #f7f7f9; text-align: left; font-weight: 600; }
     .copy-links-table .col-action { width: 160px; text-align: right; }
 
-    /* Toast styles */
+    .copy-btn {
+      display: inline-block;
+      padding: 0.35rem 0.6rem;
+      border: 1px solid #2c62f2;
+      color: #2c62f2;
+      background: #fff;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .copy-btn:hover, .copy-btn:focus {
+      background: #2c62f2;
+      color: #fff;
+    }
+
     #copy-toast {
       position: fixed;
       left: 50%;
       top: 1rem;
       transform: translateX(-50%);
-      background: #1a7f37;  /* success */
+      background: #1a7f37;
       color: #fff;
       padding: 0.5rem 0.75rem;
       border-radius: 4px;
@@ -28,26 +43,12 @@
       display: none;
       z-index: 9999;
     }
-    #copy-toast.error { background: #b00020; } /* error */
-    .copy-link {
-      display: inline-block;
-      padding: 0.35rem 0.6rem;
-      border: 1px solid #2c62f2;
-      color: #2c62f2;
-      border-radius: 4px;
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-    .copy-link:hover, .copy-link:focus {
-      background: #2c62f2;
-      color: #fff;
-    }
+    #copy-toast.error { background: #b00020; }
     .container { max-width: 980px; margin: 0 auto; }
     footer { margin-top: 2rem; font-size: 0.85rem; color: #666; }
   </style>
 </head>
 <body>
-  <!-- Toast -->
   <div id="copy-toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <div class="container">
@@ -66,27 +67,37 @@
           <tr>
             <td>Natural Therapies</td>
             <td><code>Provdetails-name-nat</code></td>
-            <td class="col-action">#Provdetails-name-natCopy Link</a></td>
+            <td class="col-action">
+              <button type="button" class="copy-btn" data-copy-key="Provdetails-name-nat">Copy Link</button>
+            </td>
           </tr>
           <tr>
             <td>Dental</td>
             <td><code>Provdetails-name-dent</code></td>
-            <td class="col-action">#Provdetails-name-dentCopy Link</a></td>
+            <td class="col-action">
+              <button type="button" class="copy-btn" data-copy-key="Provdetails-name-dent">Copy Link</button>
+            </td>
           </tr>
           <tr>
             <td>Optical</td>
             <td><code>Provdetails-name-opt</code></td>
-            <td class="col-action">#Provdetails-name-optCopy Link</a></td>
+            <td class="col-action">
+              <button type="button" class="copy-btn" data-copy-key="Provdetails-name-opt">Copy Link</button>
+            </td>
           </tr>
           <tr>
             <td>Physio</td>
             <td><code>Provdetails-name-phy</code></td>
-            <td class="col-action">#Provdetails-name-phyCopy Link</a></td>
+            <td class="col-action">
+              <button type="button" class="copy-btn" data-copy-key="Provdetails-name-phy">Copy Link</button>
+            </td>
           </tr>
           <tr>
             <td>Other Allied</td>
             <td><code>Provdetails-name-ali</code></td>
-            <td class="col-action">#Provdetails-name-aliCopy Link</a></td>
+            <td class="col-action">
+              <button type="button" class="copy-btn" data-copy-key="Provdetails-name-ali">Copy Link</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -107,27 +118,37 @@
           <tr>
             <td>Natural Therapies</td>
             <td><code>Provdetails-address-nat</code></td>
-            <td class="col-action">#Provdetails-address-natCopy Link</a></td>
+            <td class="col-action">
+              <button type="button" class="copy-btn" data-copy-key="Provdetails-address-nat">Copy Link</button>
+            </td>
           </tr>
           <tr>
             <td>Dental</td>
             <td><code>Provdetails-address-dent</code></td>
-            <td class="col-action">#Provdetails-address-dentCopy Link</a></td>
+            <td class="col-action">
+              <button type="button" class="copy-btn" data-copy-key="Provdetails-address-dent">Copy Link</button>
+            </td>
           </tr>
           <tr>
             <td>Optical</td>
             <td><code>Provdetails-address-opt</code></td>
-            <td class="col-action">#Provdetails-address-optCopy Link</a></td>
+            <td class="col-action">
+              <button type="button" class="copy-btn" data-copy-key="Provdetails-address-opt">Copy Link</button>
+            </td>
           </tr>
           <tr>
             <td>Physio</td>
             <td><code>Provdetails-address-phy</code></td>
-            <td class="col-action">#Provdetails-address-phyCopy Link</a></td>
+            <td class="col-action">
+              <button type="button" class="copy-btn" data-copy-key="Provdetails-address-phy">Copy Link</button>
+            </td>
           </tr>
           <tr>
             <td>Other Allied</td>
             <td><code>Provdetails-address-ali</code></td>
-            <td class="col-action">#Provdetails-address-aliCopy Link</a></td>
+            <td class="col-action">
+              <button type="button" class="copy-btn" data-copy-key="Provdetails-address-ali">Copy Link</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -187,22 +208,25 @@
       }
 
       document.addEventListener('click', function (evt) {
-        const link = evt.target.closest('a.copy-link');
-        if (!link) return;
+        const btn = evt.target.closest('button.copy-btn');
+        if (!btn) return;
 
-        evt.preventDefault();
-        const key = link.getAttribute('data-copy-key');
-        const href = link.getAttribute('href') || '';
+        const key  = btn.getAttribute('data-copy-key') || '';
+        const href = btn.getAttribute('data-href')     || '';
 
-        // Prefer data-copy-key; fallback to full URL with hash
-        const toCopy = key
-          ? key
-          : (href.startsWith('#')
-              ? (location.origin + location.pathname + href)
-              : href);
+        const toCopy = key || href;
+        if (!toCopy) {
+          showToast('Nothing to copy for this row', true);
+          return;
+        }
 
         copyToClipboard(toCopy)
-          .then(() => showToast(`Copied: ${toCopy}`, false))
+          .then(() => {
+            showToast(`Copied: ${toCopy}`, false);
+            const prev = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => (btn.textContent = prev), 1500);
+          })
           .catch(() => showToast('Copy failed', true));
       }, false);
     })();
