@@ -90,6 +90,51 @@
     @media (prefers-reduced-motion: reduce) {
       #fx-canvas { display: none; }
     }
+
+    /* --- Prank button spacing & overlay --- */
+    .prank-btn-wrapper {
+      display: flex;
+      justify-content: center;
+      /* “40 spaces below” the fun fact: use large top margin (adjust to taste) */
+      margin-top: 12rem; /* ~visually equivalent to a large gap */
+    }
+    .prank-btn {
+      appearance: none;
+      border: 1px solid #c33;
+      background: #fff5f5;
+      color: #a00;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .prank-btn:hover { background: #ffe2e2; }
+
+    .prank-overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(0,0,0,1); /* pure black when shown */
+      color: #ff1a1a;            /* strong red text */
+      z-index: 10000;            /* above fireworks */
+      opacity: 0;
+      pointer-events: none;
+      /* Slower fade (1s) */
+      transition: opacity 1000ms ease;
+    }
+    .prank-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .prank-overlay .prank-message {
+      font-size: clamp(48px, 12vw, 160px);
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.1;
+      text-transform: none;
+    }
   </style>
 </head>
 <body>
@@ -158,35 +203,127 @@
         <button type="button" id="fun-fact-refresh" aria-label="Get a new fun fact">🔄 Refresh fact</button>
       </div>
     </section>
+
+    <!-- 40-space gap below fun fact: button -->
+    <div class="prank-btn-wrapper">
+      <button type="button" id="do-not-click" class="prank-btn">Do not click this >.></button>
+    </div>
   </div>
 
   <!-- Fireworks overlay canvas (transparent) -->
   <canvas id="fx-canvas" aria-hidden="true"></canvas>
 
-  <!-- Copy button behavior + clicks counter (sessionStorage) -->
+  <!-- Full-screen prank overlay (fades to black, shows message, auto-dismiss) -->
+  <div id="prank-overlay" class="prank-overlay" aria-hidden="true">
+    <div class="prank-message">I told you not to click this</div>
+  </div>
+
+  <!-- Copy button behavior + clicks counter (sessionStorage) + prank logic -->
   <script>
     (function () {
       const CLICKS_KEY = 'totalClicksSession';
 
-      // Initialize session counter (persist across reloads in this tab)
+      /* Session click counter */
       function initClicks() {
-        if (sessionStorage.getItem(CLICKS_KEY) == null) {
-          sessionStorage.setItem(CLICKS_KEY, '0');
-        }
+        if (sessionStorage.getItem(CLICKS_KEY) == null) sessionStorage.setItem(CLICKS_KEY, '0');
         updateClicksUI(parseInt(sessionStorage.getItem(CLICKS_KEY), 10));
       }
-      function getClicks() {
-        return parseInt(sessionStorage.getItem(CLICKS_KEY) || '0', 10);
-      }
-      function setClicks(n) {
-        sessionStorage.setItem(CLICKS_KEY, String(n));
-      }
-      function updateClicksUI(n) {
-        const el = document.getElementById('total-clicks-count');
-        if (el) el.textContent = n.toLocaleString();
-      }
+      function getClicks() { return parseInt(sessionStorage.getItem(CLICKS_KEY) || '0', 10); }
+      function setClicks(n) { sessionStorage.setItem(CLICKS_KEY, String(n)); }
+      function updateClicksUI(n) { const el = document.getElementById('total-clicks-count'); if (el) el.textContent = n.toLocaleString(); }
       initClicks();
 
+      /* Siren (Web Audio API) — loops for overlay duration */
+      let audioCtx = null, osc = null, gain = null, sirenTimer = null, sirenInterval = null;
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function startSiren(durationMs = 5000) {
+        try {
+          audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+
+          const now = audioCtx.currentTime;
+          const f1 = 600, f2 = 1200;        // low/high tone
+          const halfSweep = 0.6;            // seconds per half cycle
+          const baseGain = prefersReducedMotion ? 0.05 : 0.12;
+
+          osc = audioCtx.createOscillator();
+          gain = audioCtx.createGain();
+          osc.type = 'sine';
+          gain.gain.setValueAtTime(baseGain, now);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          // Start at f1, then continuously sweep to f2 and back using an interval
+          osc.frequency.setValueAtTime(f1, now);
+          osc.start(now);
+
+          let up = true;
+          function scheduleSweep() {
+            const current = audioCtx.currentTime;
+            const target = up ? f2 : f1;
+            osc.frequency.cancelScheduledValues(current);
+            osc.frequency.setValueAtTime(osc.frequency.value, current);
+            osc.frequency.linearRampToValueAtTime(target, current + halfSweep);
+            up = !up;
+          }
+          // Schedule first sweep immediately, then keep looping
+          scheduleSweep();
+          sirenInterval = setInterval(scheduleSweep, halfSweep * 1000);
+
+          // Stop after duration
+          sirenTimer = setTimeout(stopSiren, durationMs);
+        } catch (e) {
+          console.warn('Siren could not start:', e);
+        }
+      }
+
+      function stopSiren() {
+        try {
+          if (sirenTimer) { clearTimeout(sirenTimer); sirenTimer = null; }
+          if (sirenInterval) { clearInterval(sirenInterval); sirenInterval = null; }
+          if (gain && audioCtx) {
+            const now = audioCtx.currentTime;
+            gain.gain.cancelScheduledValues(now);
+            gain.gain.setValueAtTime(gain.gain.value, now);
+            gain.gain.linearRampToValueAtTime(0.0001, now + 0.15);
+          }
+          if (osc) {
+            const when = audioCtx ? audioCtx.currentTime + 0.2 : 0;
+            osc.stop(when);
+          }
+        } catch (e) {
+          /* ignore */
+        } finally {
+          osc = null; gain = null;
+        }
+      }
+
+      /* Prank button behavior */
+      const prankBtn = document.getElementById('do-not-click');
+      const overlay = document.getElementById('prank-overlay');
+      let prankTimer = null;
+
+      function showPrankOverlay() {
+        if (!overlay) return;
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+
+        // Start the looping siren for overlay duration
+        startSiren(5000);
+
+        clearTimeout(prankTimer);
+        prankTimer = setTimeout(() => {
+          overlay.classList.remove('show');
+          overlay.setAttribute('aria-hidden', 'true');
+          stopSiren();
+        }, 5000); // 5 seconds
+      }
+
+      if (prankBtn) prankBtn.addEventListener('click', showPrankOverlay);
+
+      /* Copy buttons + counter */
       function copyToClipboard(text) {
         if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
         const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
@@ -207,7 +344,6 @@
         const btn = evt.target.closest('button.copy-btn');
         if (!btn) return;
 
-        // Count every copy button click (session-based per tab)
         const current = getClicks() + 1; setClicks(current); updateClicksUI(current);
 
         // 🎆 Fireworks on milestones
@@ -356,7 +492,6 @@
       }
 
       function loop() {
-        // Transparent overlay: clear only; no dark background
         ctx.globalCompositeOperation = 'source-over';
         ctx.clearRect(0, 0, W, H);
         ctx.globalCompositeOperation = 'lighter';
@@ -378,7 +513,7 @@
             continue;
           }
 
-          if (p.kind === 'flash') {
+        if (p.kind === 'flash') {
             ctx.save(); ctx.globalAlpha = Math.max(0, p.alpha);
             ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             ctx.fillStyle = p.color; ctx.fill(); ctx.restore();
@@ -387,16 +522,12 @@
           }
 
           if (p.kind === 'shell') {
-            // Trail
-            const trailSize = random(1.6, 2.8);
-            addParticle({ kind: 'trail', x: p.x, y: p.y, vx: random(-0.2, 0.2), vy: random(0.2, 0.6), alpha: 0.8, decay: 0.03, size: trailSize, color: p.trailColor });
-            // Physics
+            const trailSize = Math.random() * (2.8 - 1.6) + 1.6;
+            addParticle({ kind: 'trail', x: p.x, y: p.y, vx: Math.random() * 0.4 - 0.2, vy: Math.random() * 0.4 + 0.2, alpha: 0.8, decay: 0.03, size: trailSize, color: p.trailColor });
             p.vx *= p.friction; p.vy = p.vy * p.friction + p.gravity; p.x += p.vx; p.y += p.vy;
-            // Draw shell
             ctx.save(); ctx.globalAlpha = 1;
             ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             ctx.fillStyle = p.color; ctx.fill(); ctx.restore();
-            // Explode at apex/target
             if (!p.exploded && (p.y <= p.explodeY || p.vy >= -0.2)) {
               p.exploded = true; explodeAt(p.x, p.y, { color: p.color }); particles.splice(i, 1); continue;
             }
@@ -427,13 +558,11 @@
           rafId = requestAnimationFrame(loop);
         } else {
           cancelAnimationFrame(rafId); rafId = null;
-          // keep canvas transparent
           ctx.globalCompositeOperation = 'source-over';
           ctx.clearRect(0, 0, W, H);
         }
       }
 
-      // Milestone actions
       function singleFirework() { launchShell({ color: randomColor() }); }
       function threeFireworks() {
         launchShell({ color: randomColor() });
@@ -446,7 +575,6 @@
         setTimeout(() => textFirework(String(numberText), { color: randomColor() }), bursts * 80 + 600);
       }
 
-      // Public trigger
       window.__fxMilestoneTrigger = function (totalClicks) {
         if (reduceMotion) return;
         if (totalClicks > 0 && totalClicks % 100 === 0) {
@@ -462,14 +590,10 @@
 
   <!-- Firebase (Firestore) integration: GLOBAL "Assessors Served" -->
   <script type="module">
-    /*
-      Firebase modular SDK (CDN) — initialize and use Firestore.
-      Atomic server-side increment via FieldValue.increment(1).
-    */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // TODO: Replace with your project's config from Firebase Console
+    /* Replace with your Firebase config */
     const firebaseConfig = {
       apiKey: "AIzaSyAdWZbXTya8eiwaL-pgzxST52MuvyK4aK4",
       authDomain: "assessorcounterglobal.firebaseapp.com",
@@ -485,18 +609,13 @@
     const viewsEl = document.getElementById('page-views-count');
     const statusEl = document.getElementById('views-status');
 
-    // A single Firestore document to track global page views
     const counterRef = doc(db, 'metrics', 'assessorsServed');
 
     async function ensureCounterExists() {
       try {
         const snap = await getDoc(counterRef);
-        if (!snap.exists()) {
-          await setDoc(counterRef, { count: 0 });
-        }
-      } catch (e) {
-        console.warn('Ensure counter failed:', e);
-      }
+        if (!snap.exists()) await setDoc(counterRef, { count: 0 });
+      } catch (e) { console.warn('Ensure counter failed:', e); }
     }
 
     async function incrementGlobal() {
@@ -518,18 +637,14 @@
       }
     }
 
-    // Live updates for all viewers (auto-refresh the banner)
     onSnapshot(counterRef, (snap) => {
       const data = snap.data();
       if (data && typeof data.count === 'number') {
         viewsEl.textContent = data.count.toLocaleString();
         if (!statusEl.textContent) statusEl.textContent = ' (global)';
       }
-    }, (err) => {
-      console.warn('Snapshot listen failed:', err);
-    });
+    }, (err) => console.warn('Snapshot listen failed:', err));
 
-    // Initialize + increment once per page load
     await ensureCounterExists();
     await incrementGlobal();
   </script>
