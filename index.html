@@ -121,7 +121,7 @@
       z-index: 10000;            /* above fireworks */
       opacity: 0;
       pointer-events: none;
-      /* Slower fade (1s) */
+      /* Fade = 1s */
       transition: opacity 1000ms ease;
     }
     .prank-overlay.show {
@@ -199,7 +199,7 @@
       <div class="fact-meta" id="fun-fact-meta" hidden>
         <span id="fun-fact-source"></span>
       </div>
-      <div class="fact-actions">
+      <div class="fun-fact fun-fact-actions">
         <button type="button" id="fun-fact-refresh" aria-label="Get a new fun fact">🔄 Refresh fact</button>
       </div>
     </section>
@@ -233,42 +233,81 @@
       function updateClicksUI(n) { const el = document.getElementById('total-clicks-count'); if (el) el.textContent = n.toLocaleString(); }
       initClicks();
 
-      /* Siren (Web Audio API) — loops for overlay duration */
-      let audioCtx = null, osc = null, gain = null, sirenTimer = null, sirenInterval = null;
+      /* Siren (Web Audio API) — air-raid style, loops for overlay duration */
+      let audioCtx = null, oscA = null, oscB = null, gain = null, lfo = null, lfoGain = null, band = null;
+      let sirenTimer = null, sirenInterval = null;
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      function startSiren(durationMs = 5000) {
+      function startSiren(durationMs = 10000) {
         try {
           audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
           if (audioCtx.state === 'suspended') audioCtx.resume();
 
+          // Nodes
+          oscA = audioCtx.createOscillator();   // primary tone
+          oscB = audioCtx.createOscillator();   // slightly detuned for beating
+          gain = audioCtx.createGain();         // master amp (tremolo target)
+          lfo = audioCtx.createOscillator();    // LFO for tremolo + subtle FM
+          lfoGain = audioCtx.createGain();      // depth of LFO
+          band = audioCtx.createBiquadFilter(); // band-pass to shape timbre
+
+          // Base config
           const now = audioCtx.currentTime;
-          const f1 = 600, f2 = 1200;        // low/high tone
-          const halfSweep = 0.6;            // seconds per half cycle
-          const baseGain = prefersReducedMotion ? 0.05 : 0.12;
+          const fLow = 300, fHigh = 1600;         // classic air-raid sweep range
+          const halfSweep = 0.9;                  // seconds per half cycle (slower = heavier)
+          const baseGain = prefersReducedMotion ? 0.05 : 0.14;
 
-          osc = audioCtx.createOscillator();
-          gain = audioCtx.createGain();
-          osc.type = 'sine';
-          gain.gain.setValueAtTime(baseGain, now);
+          // Slight detune for horror beating
+          oscA.type = 'sawtooth';
+          oscB.type = 'sawtooth';
+          oscA.frequency.setValueAtTime(fLow, now);
+          oscB.frequency.setValueAtTime(fLow * 1.01, now); // ~1% detune
 
-          osc.connect(gain);
+          // Tremolo & FM LFO
+          lfo.type = 'sine';
+          lfo.frequency.setValueAtTime(4.2, now); // tremolo speed (~4 Hz)
+          lfoGain.gain.setValueAtTime(18, now);   // FM depth in Hz (subtle pitch wobble)
+
+          // Band-pass for that "horn" tone
+          band.type = 'bandpass';
+          band.frequency.setValueAtTime(800, now);
+          band.Q.setValueAtTime(0.8, now);
+
+          // Routing: Osc → band → gain → out
+          oscA.connect(band);
+          oscB.connect(band);
+          band.connect(gain);
           gain.connect(audioCtx.destination);
 
-          // Start at f1, then continuously sweep to f2 and back using an interval
-          osc.frequency.setValueAtTime(f1, now);
-          osc.start(now);
+          // LFO to gain (tremolo) and slight FM to oscA frequency
+          lfo.connect(gain.gain);          // amplitude modulation
+          lfo.connect(lfoGain);
+          lfoGain.connect(oscA.frequency); // subtle vibrato/FM on oscA only
 
+          // Master level
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(baseGain, now + 0.2); // quick fade-in
+
+          // Start
+          oscA.start(now);
+          oscB.start(now);
+          lfo.start(now);
+
+          // Continuous up/down sweeps (loop) for the duration
           let up = true;
           function scheduleSweep() {
-            const current = audioCtx.currentTime;
-            const target = up ? f2 : f1;
-            osc.frequency.cancelScheduledValues(current);
-            osc.frequency.setValueAtTime(osc.frequency.value, current);
-            osc.frequency.linearRampToValueAtTime(target, current + halfSweep);
+            const t = audioCtx.currentTime;
+            const target = up ? fHigh : fLow;
+            [oscA.frequency, oscB.frequency].forEach(param => {
+              param.cancelScheduledValues(t);
+              // non-linear feel: use exponential when possible; clamp > 0
+              const current = Math.max(1, param.value);
+              param.setValueAtTime(current, t);
+              param.exponentialRampToValueAtTime(Math.max(1, target), t + halfSweep);
+            });
             up = !up;
           }
-          // Schedule first sweep immediately, then keep looping
+          // Kick off and loop
           scheduleSweep();
           sirenInterval = setInterval(scheduleSweep, halfSweep * 1000);
 
@@ -283,20 +322,23 @@
         try {
           if (sirenTimer) { clearTimeout(sirenTimer); sirenTimer = null; }
           if (sirenInterval) { clearInterval(sirenInterval); sirenInterval = null; }
+
           if (gain && audioCtx) {
-            const now = audioCtx.currentTime;
-            gain.gain.cancelScheduledValues(now);
-            gain.gain.setValueAtTime(gain.gain.value, now);
-            gain.gain.linearRampToValueAtTime(0.0001, now + 0.15);
+            const t = audioCtx.currentTime;
+            gain.gain.cancelScheduledValues(t);
+            gain.gain.setValueAtTime(gain.gain.value, t);
+            gain.gain.linearRampToValueAtTime(0.0001, t + 0.25); // fade out
           }
-          if (osc) {
-            const when = audioCtx ? audioCtx.currentTime + 0.2 : 0;
-            osc.stop(when);
-          }
+
+          const stopAt = audioCtx ? audioCtx.currentTime + 0.3 : 0;
+          if (oscA) oscA.stop(stopAt);
+          if (oscB) oscB.stop(stopAt);
+          if (lfo)  lfo.stop(stopAt);
         } catch (e) {
           /* ignore */
         } finally {
-          osc = null; gain = null;
+          oscA = oscB = lfo = null;
+          gain = lfoGain = band = null;
         }
       }
 
@@ -310,15 +352,15 @@
         overlay.classList.add('show');
         overlay.setAttribute('aria-hidden', 'false');
 
-        // Start the looping siren for overlay duration
-        startSiren(5000);
+        // Start the looping siren for overlay duration (10s)
+        startSiren(10000);
 
         clearTimeout(prankTimer);
         prankTimer = setTimeout(() => {
           overlay.classList.remove('show');
           overlay.setAttribute('aria-hidden', 'true');
           stopSiren();
-        }, 5000); // 5 seconds
+        }, 10000); // 10 seconds
       }
 
       if (prankBtn) prankBtn.addEventListener('click', showPrankOverlay);
@@ -513,7 +555,7 @@
             continue;
           }
 
-        if (p.kind === 'flash') {
+          if (p.kind === 'flash') {
             ctx.save(); ctx.globalAlpha = Math.max(0, p.alpha);
             ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             ctx.fillStyle = p.color; ctx.fill(); ctx.restore();
