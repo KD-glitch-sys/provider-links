@@ -63,18 +63,19 @@
     .fun-fact h3 { margin: 0 0 0.5rem; font-weight: 700; }
     .fun-fact .fact-text { display: inline-block; max-width: 48rem; line-height: 1.5; }
     .fun-fact .fact-meta { margin-top: 0.5rem; font-size: 0.875rem; color: #666; }
-    .fun-fact .fact-actions { margin-top: 0.5rem; }
-    .fun-fact .fact-actions button {
+
+    /* Keep fun fact's button but separate class name to avoid layout clash */
+    .fun-fact .fun-fact-actions { margin-top: 0.5rem; }
+    .fun-fact .fun-fact-actions button {
       appearance: none; border: 1px solid #ccc; background: #fafafa; color: #222;
       padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem;
     }
-    .fun-fact .fact-actions button:hover { background: #f0f0f0; }
+    .fun-fact .fun-fact-actions button:hover { background: #f0f0f0; }
 
     @media (prefers-color-scheme: dark) {
       .fun-fact { color: #ddd; }
-      .fun-fact .fact-meta { color: #aaa; }
-      .fun-fact .fact-actions button { border-color: #444; background: #1e1e1e; color: #eee; }
-      .fun-fact .fact-actions button:hover { background: #2a2a2a; }
+      .fun-fact .fun-fact-actions button { border-color: #444; background: #1e1e1e; color: #eee; }
+      .fun-fact .fun-fact-actions button:hover { background: #2a2a2a; }
     }
 
     /* Fireworks overlay canvas (transparent overlay) */
@@ -84,56 +85,31 @@
       width: 100vw;
       height: 100vh;
       z-index: 999;
-      pointer-events: none; /* don't block clicks */
-      background: transparent; /* ensure no background wash */
+      pointer-events: none;
+      background: transparent;
     }
-    @media (prefers-reduced-motion: reduce) {
-      #fx-canvas { display: none; }
-    }
+    @media (prefers-reduced-motion: reduce) { #fx-canvas { display: none; } }
 
     /* --- Prank button spacing & overlay --- */
     .prank-btn-wrapper {
       display: flex;
       justify-content: center;
-      /* “40 spaces below” the fun fact: use large top margin (adjust to taste) */
-      margin-top: 12rem; /* ~visually equivalent to a large gap */
+      margin-top: 12rem; /* large gap ~ “40 spaces” */
     }
     .prank-btn {
-      appearance: none;
-      border: 1px solid #c33;
-      background: #fff5f5;
-      color: #a00;
-      padding: 0.5rem 0.9rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: 700;
+      appearance: none; border: 1px solid #c33; background: #fff5f5; color: #a00;
+      padding: 0.5rem 0.9rem; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 700;
     }
     .prank-btn:hover { background: #ffe2e2; }
 
     .prank-overlay {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      background: rgba(0,0,0,1); /* pure black when shown */
-      color: #ff1a1a;            /* strong red text */
-      z-index: 10000;            /* above fireworks */
-      opacity: 0;
-      pointer-events: none;
-      /* Fade = 1s */
-      transition: opacity 1000ms ease;
+      position: fixed; inset: 0; display: grid; place-items: center;
+      background: rgba(0,0,0,1); color: #ff1a1a; z-index: 10000;
+      opacity: 0; pointer-events: none; transition: opacity 1000ms ease; /* 1s fade */
     }
-    .prank-overlay.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    .prank-overlay.show { opacity: 1; pointer-events: auto; }
     .prank-overlay .prank-message {
-      font-size: clamp(48px, 12vw, 160px);
-      font-weight: 900;
-      text-align: center;
-      line-height: 1.1;
-      text-transform: none;
+      font-size: clamp(48px, 12vw, 160px); font-weight: 900; text-align: center; line-height: 1.1;
     }
   </style>
 </head>
@@ -196,15 +172,12 @@
     <section class="fun-fact" aria-labelledby="fun-fact-title">
       <h3 id="fun-fact-title">Fun Fact of the Day</h3>
       <div class="fact-text" id="fun-fact-text" aria-live="polite">Loading a fun fact…</div>
-      <div class="fact-meta" id="fun-fact-meta" hidden>
-        <span id="fun-fact-source"></span>
-      </div>
-      <div class="fun-fact fun-fact-actions">
+      <div class="fun-fact-actions">
         <button type="button" id="fun-fact-refresh" aria-label="Get a new fun fact">🔄 Refresh fact</button>
       </div>
     </section>
 
-    <!-- 40-space gap below fun fact: button -->
+    <!-- “40 spaces” below fun fact: the prank button -->
     <div class="prank-btn-wrapper">
       <button type="button" id="do-not-click" class="prank-btn">Do not click this >.></button>
     </div>
@@ -213,7 +186,7 @@
   <!-- Fireworks overlay canvas (transparent) -->
   <canvas id="fx-canvas" aria-hidden="true"></canvas>
 
-  <!-- Full-screen prank overlay (fades to black, shows message, auto-dismiss) -->
+  <!-- Full-screen prank overlay -->
   <div id="prank-overlay" class="prank-overlay" aria-hidden="true">
     <div class="prank-message">I told you not to click this</div>
   </div>
@@ -230,84 +203,145 @@
       }
       function getClicks() { return parseInt(sessionStorage.getItem(CLICKS_KEY) || '0', 10); }
       function setClicks(n) { sessionStorage.setItem(CLICKS_KEY, String(n)); }
-      function updateClicksUI(n) { const el = document.getElementById('total-clicks-count'); if (el) el.textContent = n.toLocaleString(); }
+      function updateClicksUI(n) {
+        const el = document.getElementById('total-clicks-count');
+        if (el) el.textContent = n.toLocaleString();
+      }
       initClicks();
 
-      /* Siren (Web Audio API) — air-raid style, loops for overlay duration */
-      let audioCtx = null, oscA = null, oscB = null, gain = null, lfo = null, lfoGain = null, band = null;
+      /* ===== Heavier / deeper air‑raid siren (Web Audio API) ===== */
+      let audioCtx = null;
+      let oscA = null, oscB = null, subOsc = null;  // two mains + sub
+      let preGain = null, shaper = null;
+      let hp = null, ls = null, peak = null, lp = null; // highpass, low-shelf, peaking, low-pass
+      let master = null;   // master VCA
+      let lfoAM = null, lfoFM = null, lfoFMGain = null; // AM & FM LFOs
       let sirenTimer = null, sirenInterval = null;
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function makeDistortionCurve(amount = 80) {
+        // Classic waveshaper curve (tanh-like)
+        const n_samples = 44100;
+        const curve = new Float32Array(n_samples);
+        const deg = Math.PI / 180;
+        for (let i = 0; i < n_samples; ++i) {
+          const x = (i * 2) / n_samples - 1;
+          curve[i] = (3 + amount) * x * 20 * deg / (Math.PI + amount * Math.abs(x));
+        }
+        return curve;
+      }
 
       function startSiren(durationMs = 10000) {
         try {
           audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
           if (audioCtx.state === 'suspended') audioCtx.resume();
 
-          // Nodes
-          oscA = audioCtx.createOscillator();   // primary tone
-          oscB = audioCtx.createOscillator();   // slightly detuned for beating
-          gain = audioCtx.createGain();         // master amp (tremolo target)
-          lfo = audioCtx.createOscillator();    // LFO for tremolo + subtle FM
-          lfoGain = audioCtx.createGain();      // depth of LFO
-          band = audioCtx.createBiquadFilter(); // band-pass to shape timbre
-
-          // Base config
           const now = audioCtx.currentTime;
-          const fLow = 300, fHigh = 1600;         // classic air-raid sweep range
-          const halfSweep = 0.9;                  // seconds per half cycle (slower = heavier)
-          const baseGain = prefersReducedMotion ? 0.05 : 0.14;
 
-          // Slight detune for horror beating
-          oscA.type = 'sawtooth';
+          // Sweep range & feel
+          const fLow = 180, fHigh = 1600;   // deeper bottom, biting top
+          const halfSweep = 1.1;            // slower wail = heavier
+          const baseOut = prefersReducedMotion ? 0.06 : 0.16; // master out level
+
+          // ===== Oscillators =====
+          oscA = audioCtx.createOscillator(); // square = strong odd harmonics (bite)
+          oscB = audioCtx.createOscillator(); // saw for extra edge
+          subOsc = audioCtx.createOscillator(); // sub (one octave down)
+
+          oscA.type = 'square';
           oscB.type = 'sawtooth';
+          subOsc.type = 'square';
+
           oscA.frequency.setValueAtTime(fLow, now);
-          oscB.frequency.setValueAtTime(fLow * 1.01, now); // ~1% detune
+          oscB.frequency.setValueAtTime(fLow * 1.02, now); // slight detune
+          subOsc.frequency.setValueAtTime(fLow * 0.5, now); // octave below
 
-          // Tremolo & FM LFO
-          lfo.type = 'sine';
-          lfo.frequency.setValueAtTime(4.2, now); // tremolo speed (~4 Hz)
-          lfoGain.gain.setValueAtTime(18, now);   // FM depth in Hz (subtle pitch wobble)
+          // ===== Drive & Distortion =====
+          preGain = audioCtx.createGain();        // drive into waveshaper
+          preGain.gain.setValueAtTime(2.8, now);  // crank for grit
 
-          // Band-pass for that "horn" tone
-          band.type = 'bandpass';
-          band.frequency.setValueAtTime(800, now);
-          band.Q.setValueAtTime(0.8, now);
+          shaper = audioCtx.createWaveShaper();
+          shaper.curve = makeDistortionCurve(120);
+          shaper.oversample = '4x';
 
-          // Routing: Osc → band → gain → out
-          oscA.connect(band);
-          oscB.connect(band);
-          band.connect(gain);
-          gain.connect(audioCtx.destination);
+          // ===== Filters chain for weight & bite =====
+          hp = audioCtx.createBiquadFilter();   // remove DC/rumble
+          hp.type = 'highpass';
+          hp.frequency.setValueAtTime(50, now);
+          hp.Q.setValueAtTime(0.7, now);
 
-          // LFO to gain (tremolo) and slight FM to oscA frequency
-          lfo.connect(gain.gain);          // amplitude modulation
-          lfo.connect(lfoGain);
-          lfoGain.connect(oscA.frequency); // subtle vibrato/FM on oscA only
+          ls = audioCtx.createBiquadFilter();   // low-shelf boost
+          ls.type = 'lowshelf';
+          ls.frequency.setValueAtTime(250, now);
+          ls.gain.setValueAtTime(6, now);
 
-          // Master level
-          gain.gain.setValueAtTime(0.0001, now);
-          gain.gain.linearRampToValueAtTime(baseGain, now + 0.2); // quick fade-in
+          peak = audioCtx.createBiquadFilter(); // mid peaking for bite
+          peak.type = 'peaking';
+          peak.frequency.setValueAtTime(1200, now);
+          peak.Q.setValueAtTime(1.2, now);
+          peak.gain.setValueAtTime(8, now);
 
-          // Start
-          oscA.start(now);
-          oscB.start(now);
-          lfo.start(now);
+          lp = audioCtx.createBiquadFilter();   // tame high fizz
+          lp.type = 'lowpass';
+          lp.frequency.setValueAtTime(3800, now);
+          lp.Q.setValueAtTime(0.8, now);
 
-          // Continuous up/down sweeps (loop) for the duration
+          // ===== Master gain (AM tremolo target) =====
+          master = audioCtx.createGain();
+          master.gain.setValueAtTime(0.0001, now);
+          master.gain.linearRampToValueAtTime(baseOut, now + 0.25); // fade-in attack
+
+          // ===== LFOs: AM (tremolo) & FM (vibrato) =====
+          lfoAM = audioCtx.createOscillator();
+          lfoAM.type = 'sine';
+          lfoAM.frequency.setValueAtTime(3.2, now); // slower tremolo = heft
+
+          lfoFM = audioCtx.createOscillator();
+          lfoFM.type = 'sine';
+          lfoFM.frequency.setValueAtTime(6.5, now); // subtle vibrato speed
+          lfoFMGain = audioCtx.createGain();
+          lfoFMGain.gain.setValueAtTime(25, now);   // FM depth (Hz)
+
+          // ===== Wiring: Osc -> Drive -> Shaper -> Filters -> Master -> Out =====
+          const mix = audioCtx.createGain(); mix.gain.value = 1;
+          oscA.connect(mix);
+          oscB.connect(mix);
+          subOsc.connect(mix);
+
+          mix.connect(preGain);
+          preGain.connect(shaper);
+          shaper.connect(hp);
+          hp.connect(ls);
+          ls.connect(peak);
+          peak.connect(lp);
+          lp.connect(master);
+          master.connect(audioCtx.destination);
+
+          // LFO routing
+          lfoAM.connect(master.gain);     // tremolo
+          lfoFM.connect(lfoFMGain);
+          lfoFMGain.connect(oscA.frequency); // vibrato on one voice for motion
+
+          // Start sources
+          const t0 = now;
+          oscA.start(t0); oscB.start(t0); subOsc.start(t0);
+          lfoAM.start(t0); lfoFM.start(t0);
+
+          // ===== Continuous up/down sweeps (loop) =====
           let up = true;
-          function scheduleSweep() {
+          function sweepTo(targetHz, dur) {
             const t = audioCtx.currentTime;
-            const target = up ? fHigh : fLow;
-            [oscA.frequency, oscB.frequency].forEach(param => {
-              param.cancelScheduledValues(t);
-              // non-linear feel: use exponential when possible; clamp > 0
+            [oscA.frequency, oscB.frequency, subOsc.frequency].forEach(param => {
               const current = Math.max(1, param.value);
+              param.cancelScheduledValues(t);
               param.setValueAtTime(current, t);
-              param.exponentialRampToValueAtTime(Math.max(1, target), t + halfSweep);
+              param.exponentialRampToValueAtTime(Math.max(1, targetHz), t + dur);
             });
+          }
+          function scheduleSweep() {
+            sweepTo(up ? fHigh : fLow, halfSweep);
             up = !up;
           }
-          // Kick off and loop
           scheduleSweep();
           sirenInterval = setInterval(scheduleSweep, halfSweep * 1000);
 
@@ -323,22 +357,21 @@
           if (sirenTimer) { clearTimeout(sirenTimer); sirenTimer = null; }
           if (sirenInterval) { clearInterval(sirenInterval); sirenInterval = null; }
 
-          if (gain && audioCtx) {
+          if (master && audioCtx) {
             const t = audioCtx.currentTime;
-            gain.gain.cancelScheduledValues(t);
-            gain.gain.setValueAtTime(gain.gain.value, t);
-            gain.gain.linearRampToValueAtTime(0.0001, t + 0.25); // fade out
+            master.gain.cancelScheduledValues(t);
+            master.gain.setValueAtTime(master.gain.value, t);
+            master.gain.linearRampToValueAtTime(0.0001, t + 0.3); // fade out tail
           }
 
-          const stopAt = audioCtx ? audioCtx.currentTime + 0.3 : 0;
-          if (oscA) oscA.stop(stopAt);
-          if (oscB) oscB.stop(stopAt);
-          if (lfo)  lfo.stop(stopAt);
+          const stopAt = audioCtx ? audioCtx.currentTime + 0.35 : 0;
+          [oscA, oscB, subOsc, lfoAM, lfoFM].forEach(n => { try { n && n.stop(stopAt); } catch(_){} });
+
         } catch (e) {
           /* ignore */
         } finally {
-          oscA = oscB = lfo = null;
-          gain = lfoGain = band = null;
+          oscA = oscB = subOsc = lfoAM = lfoFM = null;
+          preGain = shaper = hp = ls = peak = lp = master = lfoFMGain = null;
         }
       }
 
@@ -352,7 +385,7 @@
         overlay.classList.add('show');
         overlay.setAttribute('aria-hidden', 'false');
 
-        // Start the looping siren for overlay duration (10s)
+        // 10-second overlay with heavier siren
         startSiren(10000);
 
         clearTimeout(prankTimer);
@@ -360,12 +393,12 @@
           overlay.classList.remove('show');
           overlay.setAttribute('aria-hidden', 'true');
           stopSiren();
-        }, 10000); // 10 seconds
+        }, 10000);
       }
 
       if (prankBtn) prankBtn.addEventListener('click', showPrankOverlay);
 
-      /* Copy buttons + counter */
+      /* Copy buttons + milestone fireworks */
       function copyToClipboard(text) {
         if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
         const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
@@ -423,9 +456,10 @@
         "There are more possible chess games than atoms in the observable universe."
       ];
       const FACT_EL = document.getElementById('fun-fact-text');
-      const META_EL = document.getElementById('fun-fact-meta');
-      const SOURCE_EL = document.getElementById('fun-fact-source');
       const REFRESH_BTN = document.getElementById('fun-fact-refresh');
+      const META_EL = document.getElementById('fun-fact-meta'); // not shown but reserved
+      const SOURCE_EL = document.getElementById('fun-fact-source');
+
       const LS_KEY_TEXT = 'funFactText'; const LS_KEY_DATE = 'funFactDate'; const LS_KEY_SOURCE = 'funFactSource'; const LS_KEY_LINK = 'funFactLink';
 
       async function fetchFromWeb() {
@@ -439,24 +473,27 @@
       }
       function showFact({ fact, source, link }, today) {
         FACT_EL.textContent = fact;
-        if (source || link) {
-          SOURCE_EL.innerHTML = link
-            ? `Source: ${link}${source || 'Link'}</a>`
-            : `Source: ${source}`;
-          META_EL.hidden = false;
-        } else { META_EL.hidden = true; SOURCE_EL.textContent = ''; }
+        if (META_EL && SOURCE_EL) {
+          if (source || link) {
+            SOURCE_EL.innerHTML = link ? `Source: ${link}${source || 'Link'}</a>` : `Source: ${source}`;
+            META_EL.hidden = false;
+          } else { META_EL.hidden = true; SOURCE_EL.textContent = ''; }
+        }
         localStorage.setItem(LS_KEY_TEXT, fact); localStorage.setItem(LS_KEY_DATE, today);
         localStorage.setItem(LS_KEY_SOURCE, source || ''); localStorage.setItem(LS_KEY_LINK, link || '');
       }
+      function todayKey() { const d = new Date(); try { return d.toLocaleDateString('en-CA'); } catch { return d.toISOString().slice(0, 10); } } // duplicate safe
+      function pickLocalFactForDate(dateStr, facts) { let hash = 0; for (let i = 0; i < dateStr.length; i++) { hash = (hash * 31 + dateStr.charCodeAt(i)) >>> 0; } return facts[hash % facts.length]; } // duplicate safe
+
       async function loadFunFact(forceNew = false) {
-        if (!FACT_EL) return; const today = todayKey();
+        const today = todayKey();
         const savedDate = localStorage.getItem(LS_KEY_DATE); const savedText = localStorage.getItem(LS_KEY_TEXT);
         const savedSource = localStorage.getItem(LS_KEY_SOURCE) || ''; const savedLink = localStorage.getItem(LS_KEY_LINK) || '';
         if (!forceNew && savedDate === today && savedText) { showFact({ fact: savedText, source: savedSource, link: savedLink }, today); return; }
         try { const web = await fetchFromWeb(); if (web.fact) { showFact(web, today); return; } throw new Error('Empty fact from web'); }
-        catch (e) { const fallback = pickLocalFactForDate(today, LOCAL_FUN_FACTS); showFact({ fact: fallback, source: '', link: '' }, today); }
+        catch { const fallback = pickLocalFactForDate(today, LOCAL_FUN_FACTS); showFact({ fact: fallback, source: '', link: '' }, today); }
       }
-      if (REFRESH_BTN) { REFRESH_BTN.addEventListener('click', () => { loadFunFact(true); }); }
+      if (REFRESH_BTN) REFRESH_BTN.addEventListener('click', () => loadFunFact(true));
       loadFunFact();
     })();
   </script>
@@ -484,148 +521,82 @@
 
       function random(min, max) { return Math.random() * (max - min) + min; }
       function randomInt(min, max) { return Math.floor(random(min, max + 1)); }
-      function randomColor() {
-        const h = randomInt(0, 360), s = randomInt(70, 100), l = randomInt(45, 65);
-        return `hsl(${h}deg ${s}% ${l}%)`;
-      }
+      function randomColor() { const h = randomInt(0,360), s = randomInt(70,100), l = randomInt(45,65); return `hsl(${h}deg ${s}% ${l}%)`; }
       function addParticle(p) { particles.push(p); if (!rafId) rafId = requestAnimationFrame(loop); }
 
       function launchShell(opts = {}) {
-        const x = random(W * 0.15, W * 0.85);
-        const y = H + 4;
+        const x = random(W * 0.15, W * 0.85), y = H + 4;
         const color = opts.color ?? randomColor();
-        const vy0 = -random(9.5, 13.5);
-        const vx0 = random(-0.8, 0.8);
-        const gravity = 0.08, friction = 0.995;
-        const targetY = random(H * 0.3, H * 0.6);
-        const trailColor = color;
-        addParticle({
-          kind: 'shell', x, y, vx: vx0, vy: vy0, color, trailColor,
-          gravity, friction, size: 3.5, explodeY: targetY, exploded: false
-        });
+        const vy0 = -random(9.5, 13.5), vx0 = random(-0.8, 0.8);
+        const gravity = 0.08, friction = 0.995, targetY = random(H * 0.3, H * 0.6);
+        addParticle({ kind:'shell', x, y, vx:vx0, vy:vy0, color, trailColor:color, gravity, friction, size:3.5, explodeY:targetY, exploded:false });
       }
-      function explodeAt(x, y, opts = {}) {
-        const count = opts.count ?? 48;
-        const speedMin = opts.speedMin ?? 2.2;
-        const speedMax = opts.speedMax ?? 5.4;
-        const color = opts.color ?? randomColor();
-        const gravity = 0.06, friction = 0.985;
-        for (let i = 0; i < count; i++) {
-          const angle = random(-1.92, 1.92);
-          const speed = random(speedMin, speedMax);
-          const vx = Math.cos(angle) * speed;
-          const vy = Math.sin(angle) * speed;
-          addParticle({ kind: 'spark', x, y, vx, vy, alpha: 1, decay: random(0.012, 0.02), size: random(2, 4), color, gravity, friction });
+      function explodeAt(x, y, opts={}) {
+        const count = opts.count ?? 48, speedMin = opts.speedMin ?? 2.2, speedMax = opts.speedMax ?? 5.4;
+        const color = opts.color ?? randomColor(); const gravity = 0.06, friction = 0.985;
+        for (let i=0;i<count;i++) {
+          const angle = random(-1.92, 1.92), speed = random(speedMin, speedMax);
+          addParticle({ kind:'spark', x, y, vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed, alpha:1, decay:random(0.012,0.02), size:random(2,4), color, gravity, friction });
         }
-        addParticle({ kind: 'flash', x, y, vx: 0, vy: 0, alpha: 0.8, decay: 0.04, size: 24, color });
+        addParticle({ kind:'flash', x, y, vx:0, vy:0, alpha:0.8, decay:0.04, size:24, color });
       }
-      function textFirework(text, opts = {}) {
-        const fontSize = Math.max(56, Math.min(180, Math.floor(W * 0.11)));
-        const color = opts.color ?? randomColor();
-        const x = W / 2, y = Math.max(H * 0.27, H * 0.33);
-        addParticle({ kind: 'text', text, x, y, color, alpha: 1, decay: 0.012, textSize: fontSize, life: 140 });
-        const radius = Math.min(W, H) * 0.16, count = 12;
-        for (let i = 0; i < count; i++) {
-          const angle = (Math.PI * 2) * (i / count);
-          const px = x + Math.cos(angle) * radius;
-          const py = y + Math.sin(angle) * radius;
-          explodeAt(px, py, { count: 14, speedMin: 1.6, speedMax: 3.4, color });
+      function textFirework(text, opts={}) {
+        const fontSize = Math.max(56, Math.min(180, Math.floor(W*0.11)));
+        const color = opts.color ?? randomColor(); const x = W/2, y = Math.max(H*0.27, H*0.33);
+        addParticle({ kind:'text', text, x, y, color, alpha:1, decay:0.012, textSize:fontSize, life:140 });
+        const radius = Math.min(W,H)*0.16, count = 12;
+        for (let i=0;i<count;i++) {
+          const angle = (Math.PI*2)*(i/count);
+          explodeAt(x+Math.cos(angle)*radius, y+Math.sin(angle)*radius, { count:14, speedMin:1.6, speedMax:3.4, color });
         }
       }
 
       function loop() {
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.clearRect(0, 0, W, H);
-        ctx.globalCompositeOperation = 'lighter';
-
-        for (let i = particles.length - 1; i >= 0; i--) {
+        ctx.globalCompositeOperation='source-over'; ctx.clearRect(0,0,W,H); ctx.globalCompositeOperation='lighter';
+        for (let i=particles.length-1;i>=0;i--) {
           const p = particles[i];
-
-          if (p.kind === 'text') {
-            ctx.save();
-            ctx.font = `800 ${p.textSize}px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif`;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            const grd = ctx.createLinearGradient(p.x - p.textSize, p.y - p.textSize, p.x + p.textSize, p.y + p.textSize);
-            grd.addColorStop(0, p.color); grd.addColorStop(1, '#ffffff');
-            ctx.fillStyle = grd; ctx.globalAlpha = Math.max(0, p.alpha);
-            ctx.fillText(p.text, p.x, p.y);
-            ctx.restore();
-            p.life--; p.alpha -= p.decay * 0.6;
-            if (p.life <= 0 || p.alpha <= 0) particles.splice(i, 1);
-            continue;
+          if (p.kind==='text') {
+            ctx.save(); ctx.font=`800 ${p.textSize}px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif`;
+            ctx.textAlign='center'; ctx.textBaseline='middle';
+            const g=ctx.createLinearGradient(p.x-p.textSize,p.y-p.textSize,p.x+p.textSize,p.y+p.textSize);
+            g.addColorStop(0,p.color); g.addColorStop(1,'#fff'); ctx.fillStyle=g; ctx.globalAlpha=Math.max(0,p.alpha);
+            ctx.fillText(p.text,p.x,p.y); ctx.restore(); p.life--; p.alpha-=p.decay*0.6;
+            if (p.life<=0||p.alpha<=0) particles.splice(i,1); continue;
           }
-
-          if (p.kind === 'flash') {
-            ctx.save(); ctx.globalAlpha = Math.max(0, p.alpha);
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = p.color; ctx.fill(); ctx.restore();
-            p.alpha -= p.decay; if (p.alpha <= 0) particles.splice(i, 1);
-            continue;
+          if (p.kind==='flash') {
+            ctx.save(); ctx.globalAlpha=Math.max(0,p.alpha); ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill(); ctx.restore();
+            p.alpha-=p.decay; if (p.alpha<=0) particles.splice(i,1); continue;
           }
-
-          if (p.kind === 'shell') {
-            const trailSize = Math.random() * (2.8 - 1.6) + 1.6;
-            addParticle({ kind: 'trail', x: p.x, y: p.y, vx: Math.random() * 0.4 - 0.2, vy: Math.random() * 0.4 + 0.2, alpha: 0.8, decay: 0.03, size: trailSize, color: p.trailColor });
-            p.vx *= p.friction; p.vy = p.vy * p.friction + p.gravity; p.x += p.vx; p.y += p.vy;
-            ctx.save(); ctx.globalAlpha = 1;
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = p.color; ctx.fill(); ctx.restore();
-            if (!p.exploded && (p.y <= p.explodeY || p.vy >= -0.2)) {
-              p.exploded = true; explodeAt(p.x, p.y, { color: p.color }); particles.splice(i, 1); continue;
-            }
-            if (p.y < -50 || p.x < -50 || p.x > W + 50) particles.splice(i, 1);
-            continue;
+          if (p.kind==='shell') {
+            const trailSize = Math.random()*(2.8-1.6)+1.6;
+            addParticle({ kind:'trail', x:p.x, y:p.y, vx:Math.random()*0.4-0.2, vy:Math.random()*0.4+0.2, alpha:0.8, decay:0.03, size:trailSize, color:p.trailColor });
+            p.vx*=p.friction; p.vy=p.vy*p.friction+p.gravity; p.x+=p.vx; p.y+=p.vy;
+            ctx.save(); ctx.globalAlpha=1; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill(); ctx.restore();
+            if (!p.exploded && (p.y<=p.explodeY || p.vy>=-0.2)) { p.exploded=true; explodeAt(p.x,p.y,{color:p.color}); particles.splice(i,1); continue; }
+            if (p.y<-50||p.x<-50||p.x>W+50) particles.splice(i,1); continue;
           }
-
-          if (p.kind === 'trail') {
-            ctx.save(); ctx.globalAlpha = Math.max(0, p.alpha);
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = p.color; ctx.fill(); ctx.restore();
-            p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
-            if (p.alpha <= 0) particles.splice(i, 1);
-            continue;
+          if (p.kind==='trail') {
+            ctx.save(); ctx.globalAlpha=Math.max(0,p.alpha); ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill(); ctx.restore();
+            p.x+=p.vx; p.y+=p.vy; p.alpha-=p.decay; if (p.alpha<=0) particles.splice(i,1); continue;
           }
-
-          if (p.kind === 'spark') {
-            p.vx *= p.friction; p.vy = p.vy * p.friction + p.gravity; p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
-            ctx.save(); ctx.globalAlpha = Math.max(0, p.alpha);
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = p.color; ctx.fill(); ctx.restore();
-            if (p.alpha <= 0 || p.x < -60 || p.x > W + 60 || p.y > H + 60) particles.splice(i, 1);
-            continue;
+          if (p.kind==='spark') {
+            p.vx*=p.friction; p.vy=p.vy*p.friction+p.gravity; p.x+=p.vx; p.y+=p.vy; p.alpha-=p.decay;
+            ctx.save(); ctx.globalAlpha=Math.max(0,p.alpha); ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill(); ctx.restore();
+            if (p.alpha<=0||p.x<-60||p.x>W+60||p.y>H+60) particles.splice(i,1); continue;
           }
         }
-
-        if (particles.length > 0) {
-          rafId = requestAnimationFrame(loop);
-        } else {
-          cancelAnimationFrame(rafId); rafId = null;
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.clearRect(0, 0, W, H);
-        }
+        if (particles.length>0) { rafId=requestAnimationFrame(loop); } else { cancelAnimationFrame(rafId); rafId=null; ctx.globalCompositeOperation='source-over'; ctx.clearRect(0,0,W,H); }
       }
 
-      function singleFirework() { launchShell({ color: randomColor() }); }
-      function threeFireworks() {
-        launchShell({ color: randomColor() });
-        setTimeout(() => launchShell({ color: randomColor() }), 120);
-        setTimeout(() => launchShell({ color: randomColor() }), 240);
-      }
-      function barrage(numberText) {
-        const bursts = randomInt(8, 12);
-        for (let i = 0; i < bursts; i++) setTimeout(() => launchShell({ color: randomColor() }), i * 80);
-        setTimeout(() => textFirework(String(numberText), { color: randomColor() }), bursts * 80 + 600);
-      }
+      function singleFirework(){ launchShell({color:randomColor()}); }
+      function threeFireworks(){ launchShell({color:randomColor()}); setTimeout(()=>launchShell({color:randomColor()}),120); setTimeout(()=>launchShell({color:randomColor()}),240); }
+      function barrage(n){ const b=randomInt(8,12); for(let i=0;i<b;i++) setTimeout(()=>launchShell({color:randomColor()}),i*80); setTimeout(()=>textFirework(String(n),{color:randomColor()}),b*80+600); }
 
-      window.__fxMilestoneTrigger = function (totalClicks) {
+      window.__fxMilestoneTrigger = function(totalClicks){
         if (reduceMotion) return;
-        if (totalClicks > 0 && totalClicks % 100 === 0) {
-          barrage(totalClicks);
-        } else if (totalClicks > 0 && totalClicks % 50 === 0) {
-          threeFireworks();
-        } else if (totalClicks > 0 && totalClicks % 10 === 0) {
-          singleFirework();
-        }
+        if (totalClicks>0 && totalClicks%100===0) barrage(totalClicks);
+        else if (totalClicks>0 && totalClicks%50===0) threeFireworks();
+        else if (totalClicks>0 && totalClicks%10===0) singleFirework();
       };
     })();
   </script>
@@ -635,7 +606,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    /* Replace with your Firebase config */
+    /* Replace with your Firebase config if needed */
     const firebaseConfig = {
       apiKey: "AIzaSyAdWZbXTya8eiwaL-pgzxST52MuvyK4aK4",
       authDomain: "assessorcounterglobal.firebaseapp.com",
@@ -654,37 +625,23 @@
     const counterRef = doc(db, 'metrics', 'assessorsServed');
 
     async function ensureCounterExists() {
-      try {
-        const snap = await getDoc(counterRef);
-        if (!snap.exists()) await setDoc(counterRef, { count: 0 });
-      } catch (e) { console.warn('Ensure counter failed:', e); }
+      try { const snap = await getDoc(counterRef); if (!snap.exists()) await setDoc(counterRef, { count: 0 }); }
+      catch (e) { console.warn('Ensure counter failed:', e); }
     }
-
     async function incrementGlobal() {
-      try {
-        await updateDoc(counterRef, { count: increment(1) });
-        statusEl.textContent = ' (global)';
-      } catch (e) {
-        if (e && e.code === 'not-found') {
-          await setDoc(counterRef, { count: 1 });
-          statusEl.textContent = ' (global)';
-        } else {
+      try { await updateDoc(counterRef, { count: increment(1) }); statusEl.textContent = ' (global)'; }
+      catch (e) {
+        if (e && e.code === 'not-found') { await setDoc(counterRef, { count: 1 }); statusEl.textContent = ' (global)'; }
+        else {
           console.warn('Global increment failed; showing local count.', e);
-          const key = 'pageViewsLocal';
-          const n = parseInt(localStorage.getItem(key) || '0', 10) + 1;
-          localStorage.setItem(key, String(n));
-          viewsEl.textContent = n.toLocaleString();
-          statusEl.textContent = ' (local)';
+          const key = 'pageViewsLocal'; const n = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+          localStorage.setItem(key, String(n)); viewsEl.textContent = n.toLocaleString(); statusEl.textContent = ' (local)';
         }
       }
     }
-
     onSnapshot(counterRef, (snap) => {
       const data = snap.data();
-      if (data && typeof data.count === 'number') {
-        viewsEl.textContent = data.count.toLocaleString();
-        if (!statusEl.textContent) statusEl.textContent = ' (global)';
-      }
+      if (data && typeof data.count === 'number') { viewsEl.textContent = data.count.toLocaleString(); if (!statusEl.textContent) statusEl.textContent = ' (global)'; }
     }, (err) => console.warn('Snapshot listen failed:', err));
 
     await ensureCounterExists();
@@ -692,3 +649,4 @@
   </script>
 </body>
 </html>
+``
