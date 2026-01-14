@@ -28,25 +28,17 @@
     .copy-btn.copied { background: #2c62f2 !important; color: #fff !important; border-color: #2c62f2 !important; font-weight: 700; }
     .copy-btn.shake { animation: btn-shake 350ms ease; }
     @keyframes btn-shake {
-      0% { transform: translateX(0); }
-      20% { transform: translateX(-2px); }
-      40% { transform: translateX(2px); }
-      60% { transform: translateX(-2px); }
-      80% { transform: translateX(2px); }
-      100% { transform: translateX(0); }
+      0% { transform: translateX(0); } 20% { transform: translateX(-2px); }
+      40% { transform: translateX(2px); } 60% { transform: translateX(-2px); }
+      80% { transform: translateX(2px); } 100% { transform: translateX(0); }
     }
     .container { max-width: 980px; margin: 0 auto; }
     footer { margin-top: 2rem; font-size: 0.85rem; color: #666; }
 
     /* Top banner: Assessors Served (global) */
     .page-views-banner {
-      background: #f7faff;
-      border: 1px solid #dbe6ff;
-      color: #1a3fb0;
-      padding: 0.5rem 0.75rem;
-      border-radius: 6px;
-      margin-bottom: 0.75rem;
-      font-weight: 600;
+      background: #f7faff; border: 1px solid #dbe6ff; color: #1a3fb0;
+      padding: 0.5rem 0.75rem; border-radius: 6px; margin-bottom: 0.75rem; font-weight: 600;
     }
     .page-views-banner small { color: #3553c7; font-weight: 500; }
 
@@ -54,12 +46,7 @@
     .metrics { margin: 1rem 0; font-weight: 600; color: #333; }
 
     /* Fun Fact styles */
-    .fun-fact {
-      text-align: center;
-      margin-top: 3.25rem; /* ≈3–4 spaces below the footer tip */
-      font-size: 1rem;
-      color: #333;
-    }
+    .fun-fact { text-align: center; margin-top: 3.25rem; font-size: 1rem; color: #333; }
     .fun-fact h3 { margin: 0 0 0.5rem; font-weight: 700; }
     .fun-fact .fact-text { display: inline-block; max-width: 48rem; line-height: 1.5; }
     .fun-fact .fun-fact-actions { margin-top: 0.5rem; }
@@ -77,22 +64,13 @@
 
     /* Fireworks overlay canvas (transparent overlay) */
     #fx-canvas {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 999;
-      pointer-events: none;
-      background: transparent;
+      position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 999;
+      pointer-events: none; background: transparent;
     }
     @media (prefers-reduced-motion: reduce) { #fx-canvas { display: none; } }
 
-    /* --- Prank button spacing & overlay --- */
-    .prank-btn-wrapper {
-      display: flex;
-      justify-content: center;
-      margin-top: 12rem; /* large gap ~ “40 spaces” */
-    }
+    /* Prank button & overlay */
+    .prank-btn-wrapper { display: flex; justify-content: center; margin-top: 12rem; }
     .prank-btn {
       appearance: none; border: 1px solid #c33; background: #fff5f5; color: #a00;
       padding: 0.5rem 0.9rem; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 700;
@@ -156,16 +134,12 @@
       </table>
     </section>
 
-    <!-- Total clicks counter (between last table and the footer) -->
-    <div class="metrics" role="status" aria-live="polite">
-      Total clicks: <span id="total-clicks-count">0</span>
-    </div>
+    <!-- Total clicks counter -->
+    <div class="metrics" role="status" aria-live="polite">Total clicks: <span id="total-clicks-count">0</span></div>
 
-    <footer>
-      <p>Tip: Click any button to copy exactly the section key shown in the middle column.</p>
-    </footer>
+    <footer><p>Tip: Click any button to copy exactly the section key shown in the middle column.</p></footer>
 
-    <!-- Fun Fact of the Day (3–4 spaces below the footer tip) -->
+    <!-- Fun Fact -->
     <section class="fun-fact" aria-labelledby="fun-fact-title">
       <h3 id="fun-fact-title">Fun Fact of the Day</h3>
       <div class="fact-text" id="fun-fact-text" aria-live="polite">Loading a fun fact…</div>
@@ -174,7 +148,7 @@
       </div>
     </section>
 
-    <!-- “40 spaces” below fun fact: the prank button -->
+    <!-- Prank button -->
     <div class="prank-btn-wrapper">
       <button type="button" id="do-not-click" class="prank-btn">Do not click this >.></button>
     </div>
@@ -183,12 +157,12 @@
   <!-- Fireworks overlay canvas (transparent) -->
   <canvas id="fx-canvas" aria-hidden="true"></canvas>
 
-  <!-- Full-screen prank overlay -->
+  <!-- Prank overlay -->
   <div id="prank-overlay" class="prank-overlay" aria-hidden="true">
     <div class="prank-message">I told you not to click this</div>
   </div>
 
-  <!-- Copy button behavior + clicks counter (sessionStorage) + prank logic -->
+  <!-- Clicks counter + prank + siren -->
   <script>
     (function () {
       const CLICKS_KEY = 'totalClicksSession';
@@ -200,38 +174,31 @@
       }
       function getClicks() { return parseInt(sessionStorage.getItem(CLICKS_KEY) || '0', 10); }
       function setClicks(n) { sessionStorage.setItem(CLICKS_KEY, String(n)); }
-      function updateClicksUI(n) {
-        const el = document.getElementById('total-clicks-count');
-        if (el) el.textContent = n.toLocaleString();
-      }
+      function updateClicksUI(n) { const el = document.getElementById('total-clicks-count'); if (el) el.textContent = n.toLocaleString(); }
       initClicks();
 
-      /* ===== Heavier / deeper siren (with lower top end, faster oscillation, more grit) ===== */
+      /* ===== Emergency-style siren: lower top end, faster oscillation, extra grit ===== */
       let audioCtx = null;
-      let oscA = null, oscB = null, subOsc = null;         // main voices + sub
+      let oscA = null, oscB = null, subOsc = null;
       let noiseBuf = null, noiseSrc = null, noiseGain = null, noiseHP = null, noiseLP = null;
       let preGain = null, shaper = null;
-      let hp = null, ls = null, peak = null, lp = null;    // filter stack
-      let master = null;                                    // master VCA
-      let lfoAM = null, lfoFM = null, lfoFMGain = null;     // AM & FM LFOs
+      let hp = null, ls = null, peak = null, lp = null;
+      let master = null;
+      let lfoAM = null, lfoFM = null, lfoFMGain = null;
       let sirenTimer = null, sirenInterval = null;
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      function makeDistortionCurve(amount = 160) {
+      function makeDistortionCurve(amount = 180) {
         const n = 65536, curve = new Float32Array(n), deg = Math.PI / 180;
-        for (let i = 0; i < n; i++) {
-          const x = (i * 2) / n - 1;
-          curve[i] = (3 + amount) * x * 20 * deg / (Math.PI + amount * Math.abs(x));
-        }
+        for (let i = 0; i < n; i++) { const x = (i * 2) / n - 1; curve[i] = (3 + amount) * x * 20 * deg / (Math.PI + amount * Math.abs(x)); }
         return curve;
       }
 
       function createNoiseBuffer(ctx, seconds = 2) {
-        const rate = ctx.sampleRate;
-        const length = Math.max(rate * seconds, rate); // at least 1 second
+        const rate = ctx.sampleRate, length = Math.max(rate * seconds, rate);
         const buf = ctx.createBuffer(1, length, rate);
         const data = buf.getChannelData(0);
-        for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1; // white noise
+        for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
         return buf;
       }
 
@@ -242,155 +209,95 @@
 
           const now = audioCtx.currentTime;
 
-          /* Sweep range & speed */
-          const fLow = 170;             // deeper low
-          const fHigh = 1100;           // lowered top end
-          const halfSweep = 0.6;        // faster up/down oscillation
+          /* ▶ Retuned sweep for emergency style */
+          const fLow = 170;          // deep base
+          const fHigh = 700;         // LOWER TOP END for warning siren character
+          const halfSweep = 0.6;     // faster oscillation (up/down ~0.6s)
           const baseOut = prefersReducedMotion ? 0.05 : 0.15;
 
-          /* Oscillators */
-          oscA = audioCtx.createOscillator(); // square: bite
-          oscB = audioCtx.createOscillator(); // saw: edge
-          subOsc = audioCtx.createOscillator(); // sub octave
+          /* Voices (square+saw + sub) */
+          oscA = audioCtx.createOscillator(); oscA.type = 'square'; oscA.frequency.setValueAtTime(fLow, now);
+          oscB = audioCtx.createOscillator(); oscB.type = 'sawtooth'; oscB.frequency.setValueAtTime(fLow * 1.02, now);
+          subOsc = audioCtx.createOscillator(); subOsc.type = 'square'; subOsc.frequency.setValueAtTime(fLow * 0.5, now);
 
-          oscA.type = 'square';
-          oscB.type = 'sawtooth';
-          subOsc.type = 'square';
+          /* Drive + distortion for grit */
+          preGain = audioCtx.createGain(); preGain.gain.setValueAtTime(3.4, now);
+          shaper = audioCtx.createWaveShaper(); shaper.curve = makeDistortionCurve(190); shaper.oversample = '4x';
 
-          oscA.frequency.setValueAtTime(fLow, now);
-          oscB.frequency.setValueAtTime(fLow * 1.02, now);  // slight detune
-          subOsc.frequency.setValueAtTime(fLow * 0.5, now); // octave down
+          /* Filter stack */
+          hp = audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(40, now); hp.Q.setValueAtTime(0.7, now);
+          ls = audioCtx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.setValueAtTime(220, now); ls.gain.setValueAtTime(8, now);
+          peak = audioCtx.createBiquadFilter(); peak.type='peaking'; peak.frequency.setValueAtTime(1150, now); peak.Q.setValueAtTime(1.3, now); peak.gain.setValueAtTime(10, now);
+          lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(3400, now); lp.Q.setValueAtTime(0.9, now);
 
-          /* Grit: drive + distortion */
-          preGain = audioCtx.createGain();
-          preGain.gain.setValueAtTime(3.4, now); // more drive
+          /* Master */
+          master = audioCtx.createGain(); master.gain.setValueAtTime(0.0001, now); master.gain.linearRampToValueAtTime(baseOut, now + 0.2);
 
-          shaper = audioCtx.createWaveShaper();
-          shaper.curve = makeDistortionCurve(180); // heavier curve
-          shaper.oversample = '4x';
-
-          /* Filter stack for weight/bite control */
-          hp = audioCtx.createBiquadFilter(); hp.type = 'highpass';
-          hp.frequency.setValueAtTime(40, now); hp.Q.setValueAtTime(0.7, now);
-
-          ls = audioCtx.createBiquadFilter(); ls.type = 'lowshelf';
-          ls.frequency.setValueAtTime(220, now); ls.gain.setValueAtTime(8, now); // stronger low boost
-
-          peak = audioCtx.createBiquadFilter(); peak.type = 'peaking';
-          peak.frequency.setValueAtTime(1150, now); peak.Q.setValueAtTime(1.3, now);
-          peak.gain.setValueAtTime(10, now); // extra bite
-
-          lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass';
-          lp.frequency.setValueAtTime(3600, now); lp.Q.setValueAtTime(0.9, now); // tame fizz slightly
-
-          /* Master gain */
-          master = audioCtx.createGain();
-          master.gain.setValueAtTime(0.0001, now);
-          master.gain.linearRampToValueAtTime(baseOut, now + 0.2); // fast attack
-
-          /* LFOs: faster AM/FM */
-          lfoAM = audioCtx.createOscillator(); lfoAM.type = 'sine';
-          lfoAM.frequency.setValueAtTime(5.5, now); // faster tremolo
-
-          lfoFM = audioCtx.createOscillator(); lfoFM.type = 'sine';
-          lfoFM.frequency.setValueAtTime(8.5, now); // faster vibrato
+          /* LFOs (faster AM/FM) */
+          lfoAM = audioCtx.createOscillator(); lfoAM.type='sine'; lfoAM.frequency.setValueAtTime(5.5, now);
+          lfoFM = audioCtx.createOscillator(); lfoFM.type='sine'; lfoFM.frequency.setValueAtTime(8.5, now);
           lfoFMGain = audioCtx.createGain(); lfoFMGain.gain.setValueAtTime(30, now);
 
-          /* Noise for extra grit (filtered & subtle) */
+          /* Subtle filtered noise for texture */
           noiseBuf = noiseBuf || createNoiseBuffer(audioCtx, 2.5);
-          noiseSrc = audioCtx.createBufferSource();
-          noiseSrc.buffer = noiseBuf;
-          noiseSrc.loop = true;
+          noiseSrc = audioCtx.createBufferSource(); noiseSrc.buffer = noiseBuf; noiseSrc.loop = true;
+          noiseGain = audioCtx.createGain(); noiseGain.gain.setValueAtTime(prefersReducedMotion ? 0.01 : 0.035, now);
+          noiseHP = audioCtx.createBiquadFilter(); noiseHP.type='highpass'; noiseHP.frequency.setValueAtTime(300, now);
+          noiseLP = audioCtx.createBiquadFilter(); noiseLP.type='lowpass'; noiseLP.frequency.setValueAtTime(2400, now);
 
-          noiseGain = audioCtx.createGain();
-          noiseGain.gain.setValueAtTime(prefersReducedMotion ? 0.01 : 0.035, now); // subtle but present
-
-          noiseHP = audioCtx.createBiquadFilter(); noiseHP.type = 'highpass';
-          noiseHP.frequency.setValueAtTime(300, now);
-
-          noiseLP = audioCtx.createBiquadFilter(); noiseLP.type = 'lowpass';
-          noiseLP.frequency.setValueAtTime(2500, now);
-
-          /* Wiring: Osc mix -> drive -> shaper -> filters -> master -> out */
+          /* Routing */
           const mix = audioCtx.createGain(); mix.gain.value = 1;
           oscA.connect(mix); oscB.connect(mix); subOsc.connect(mix);
+          mix.connect(preGain); preGain.connect(shaper); shaper.connect(hp); hp.connect(ls); ls.connect(peak); peak.connect(lp); lp.connect(master); master.connect(audioCtx.destination);
+          noiseSrc.connect(noiseHP); noiseHP.connect(noiseLP); noiseLP.connect(noiseGain); noiseGain.connect(master);
+          lfoAM.connect(master.gain); lfoFM.connect(lfoFMGain); lfoFMGain.connect(oscA.frequency);
 
-          mix.connect(preGain);
-          preGain.connect(shaper);
-          shaper.connect(hp);
-          hp.connect(ls);
-          ls.connect(peak);
-          peak.connect(lp);
-          lp.connect(master);
-          master.connect(audioCtx.destination);
+          /* Start */
+          const t0 = now; oscA.start(t0); oscB.start(t0); subOsc.start(t0); lfoAM.start(t0); lfoFM.start(t0); noiseSrc.start(t0);
 
-          /* Noise path -> master */
-          noiseSrc.connect(noiseHP);
-          noiseHP.connect(noiseLP);
-          noiseLP.connect(noiseGain);
-          noiseGain.connect(master);
-
-          /* LFO routing */
-          lfoAM.connect(master.gain);           // tremolo
-          lfoFM.connect(lfoFMGain);
-          lfoFMGain.connect(oscA.frequency);    // FM on one voice
-
-          /* Start sources */
-          const t0 = now;
-          oscA.start(t0); oscB.start(t0); subOsc.start(t0);
-          lfoAM.start(t0); lfoFM.start(t0);
-          noiseSrc.start(t0);
-
-          /* Continuous up/down sweeps (loop) */
+          /* Looping sweep (up/down) with lower top end */
           let up = true;
-          function sweepTo(targetHz, durSec) {
+          function sweepTo(targetHz, dur) {
             const t = audioCtx.currentTime;
             [oscA.frequency, oscB.frequency, subOsc.frequency].forEach(param => {
               const current = Math.max(1, param.value);
               param.cancelScheduledValues(t);
               param.setValueAtTime(current, t);
-              param.exponentialRampToValueAtTime(Math.max(1, targetHz), t + durSec);
+              param.exponentialRampToValueAtTime(Math.max(1, targetHz), t + dur);
             });
           }
-          function scheduleSweep() {
-            sweepTo(up ? fHigh : fLow, halfSweep);
-            up = !up;
-          }
+          function scheduleSweep() { sweepTo(up ? fHigh : fLow, halfSweep); up = !up; }
           scheduleSweep();
           sirenInterval = setInterval(scheduleSweep, halfSweep * 1000);
 
-          /* Stop after duration */
+          /* Auto stop */
           sirenTimer = setTimeout(stopSiren, durationMs);
-        } catch (e) {
-          console.warn('Siren could not start:', e);
-        }
+
+        } catch (e) { console.warn('Siren could not start:', e); }
       }
 
       function stopSiren() {
         try {
           if (sirenTimer) { clearTimeout(sirenTimer); sirenTimer = null; }
           if (sirenInterval) { clearInterval(sirenInterval); sirenInterval = null; }
-
           if (master && audioCtx) {
             const t = audioCtx.currentTime;
             master.gain.cancelScheduledValues(t);
             master.gain.setValueAtTime(master.gain.value, t);
-            master.gain.linearRampToValueAtTime(0.0001, t + 0.25); // fade out tail
+            master.gain.linearRampToValueAtTime(0.0001, t + 0.25);
           }
-
           const stopAt = audioCtx ? audioCtx.currentTime + 0.3 : 0;
           [oscA, oscB, subOsc, lfoAM, lfoFM].forEach(n => { try { n && n.stop(stopAt); } catch(_){} });
           if (noiseSrc) { try { noiseSrc.stop(stopAt); } catch(_){} }
-        } catch (e) {
-          /* ignore */
-        } finally {
+        } catch (e) { /* ignore */ }
+        finally {
           oscA = oscB = subOsc = lfoAM = lfoFM = null;
           preGain = shaper = hp = ls = peak = lp = master = lfoFMGain = null;
           noiseSrc = noiseGain = noiseHP = noiseLP = null;
         }
       }
 
-      /* Prank button behavior */
+      /* Prank overlay wiring */
       const prankBtn = document.getElementById('do-not-click');
       const overlay = document.getElementById('prank-overlay');
       let prankTimer = null;
@@ -399,10 +306,7 @@
         if (!overlay) return;
         overlay.classList.add('show');
         overlay.setAttribute('aria-hidden', 'false');
-
-        // 10-second overlay with heavier, faster, grittier siren
         startSiren(10000);
-
         clearTimeout(prankTimer);
         prankTimer = setTimeout(() => {
           overlay.classList.remove('show');
@@ -410,55 +314,42 @@
           stopSiren();
         }, 10000);
       }
-
       if (prankBtn) prankBtn.addEventListener('click', showPrankOverlay);
 
       /* Copy buttons + milestone fireworks */
       function copyToClipboard(text) {
         if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
-        const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
-        ta.style.position = 'absolute'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select();
-        try { document.execCommand('copy'); } catch (e) {}
+        const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly','');
+        ta.style.position='absolute'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch(e) {}
         document.body.removeChild(ta); return Promise.resolve();
       }
-      function revertButton(btn) {
-        if (!btn) return; clearTimeout(btn._revertTimer);
-        btn.textContent = btn.dataset.originalText || 'Copy Link';
-        btn.classList.remove('copied', 'shake');
-      }
-      function revertOtherButtons(exceptBtn) {
-        document.querySelectorAll('button.copy-btn.copied, button.copy-btn.shake').forEach((b) => { if (b !== exceptBtn) revertButton(b); });
-      }
+      function revertButton(btn){ if(!btn) return; clearTimeout(btn._revertTimer); btn.textContent=btn.dataset.originalText||'Copy Link'; btn.classList.remove('copied','shake'); }
+      function revertOtherButtons(exceptBtn){ document.querySelectorAll('button.copy-btn.copied, button.copy-btn.shake').forEach(b=>{ if(b!==exceptBtn) revertButton(b); }); }
 
-      document.addEventListener('click', function (evt) {
-        const btn = evt.target.closest('button.copy-btn');
-        if (!btn) return;
-
-        const current = getClicks() + 1; setClicks(current); updateClicksUI(current);
-
-        // 🎆 Fireworks on milestones
+      document.addEventListener('click', function(evt){
+        const btn = evt.target.closest('button.copy-btn'); if (!btn) return;
+        const current = getClicks()+1; setClicks(current); updateClicksUI(current);
         if (window.__fxMilestoneTrigger) window.__fxMilestoneTrigger(current);
-
         const key = btn.getAttribute('data-copy-key'); if (!key) return;
         revertOtherButtons(btn);
-
-        copyToClipboard(key).then(() => {
-          const originalText = btn.dataset.originalText || btn.textContent;
-          btn.dataset.originalText = originalText; btn.textContent = 'Copied!'; btn.classList.add('copied');
+        copyToClipboard(key).then(()=>{
+          const original = btn.dataset.originalText||btn.textContent;
+          btn.dataset.originalText = original; btn.textContent='Copied!'; btn.classList.add('copied');
           btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
-          btn.addEventListener('animationend', function handleEnd() { btn.classList.remove('shake'); btn.removeEventListener('animationend', handleEnd); });
-          clearTimeout(btn._revertTimer); btn._revertTimer = setTimeout(() => revertButton(btn), 10000);
-        }).catch(() => {});
+          btn.addEventListener('animationend', function handle(){ btn.classList.remove('shake'); btn.removeEventListener('animationend', handle); });
+          clearTimeout(btn._revertTimer); btn._revertTimer = setTimeout(()=>revertButton(btn), 10000);
+        }).catch(()=>{});
       }, false);
     })();
   </script>
 
-  <!-- Fun Fact: daily fetch + local fallback and caching -->
+  <!-- Fun Fact -->
   <script>
-    (function () {
-      function todayKey() { const d = new Date(); try { return d.toLocaleDateString('en-CA'); } catch { return d.toISOString().slice(0, 10); } }
-      function pickLocalFactForDate(dateStr, facts) { let hash = 0; for (let i = 0; i < dateStr.length; i++) { hash = (hash * 31 + dateStr.charCodeAt(i)) >>> 0; } return facts[hash % facts.length]; }
-      const LOCAL_FUN_FACTS = [
+    (function(){
+      function todayKey(){const d=new Date();try{return d.toLocaleDateString('en-CA');}catch{return d.toISOString().slice(0,10);}}
+      function pickLocalFactForDate(s,f){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return f[h%f.length];}
+      const LOCAL=[
         "Honey never spoils—archaeologists have found edible honey in ancient Egyptian tombs.",
         "Bananas are berries, but strawberries aren't!",
         "Octopuses have three hearts and blue blood.",
@@ -470,155 +361,52 @@
         "Hot water can freeze faster than cold water (the Mpemba effect).",
         "There are more possible chess games than atoms in the observable universe."
       ];
-      const FACT_EL = document.getElementById('fun-fact-text');
-      const REFRESH_BTN = document.getElementById('fun-fact-refresh');
-      const META_EL = document.getElementById('fun-fact-meta'); // reserved
-      const SOURCE_EL = document.getElementById('fun-fact-source');
-
-      const LS_KEY_TEXT = 'funFactText'; const LS_KEY_DATE = 'funFactDate'; const LS_KEY_SOURCE = 'funFactSource'; const LS_KEY_LINK = 'funFactLink';
-
-      async function fetchFromWeb() {
-        const resp = await fetch('https://uselessfacts.jsph.pl/random.json?language=en', { cache: 'no-store' });
-        if (!resp.ok) throw new Error('Fact API response not ok');
-        const data = await resp.json();
-        const fact = (data && data.text) ? String(data.text).trim() : '';
-        const source = (data && (data.source || data.source_url || data.permalink)) ? String(data.source || data.source_url || data.permalink) : '';
-        const link = (data && (data.source_url || data.permalink)) ? String(data.source_url || data.permalink) : '';
-        return { fact, source, link };
+      const FACT=document.getElementById('fun-fact-text');
+      const BTN=document.getElementById('fun-fact-refresh');
+      const KTXT='funFactText',KDATE='funFactDate',KSRC='funFactSource',KLINK='funFactLink';
+      async function fetchWeb(){const r=await fetch('https://uselessfacts.jsph.pl/random.json?language=en',{cache:'no-store'});if(!r.ok)throw new Error('bad');const d=await r.json();return{fact:(d&&d.text?String(d.text).trim():''),source:(d&&(d.source||d.source_url||d.permalink))?String(d.source||d.source_url||d.permalink):'',link:(d&&(d.source_url||d.permalink))?String(d.source_url||d.permalink):''};}
+      function show({fact},today){FACT.textContent=fact;localStorage.setItem(KTXT,fact);localStorage.setItem(KDATE,today);localStorage.setItem(KSRC,'');localStorage.setItem(KLINK,'');}
+      async function load(force=false){if(!FACT)return;const today=todayKey();const sd=localStorage.getItem(KDATE),st=localStorage.getItem(KTXT);if(!force&&sd===today&&st){show({fact:st},today);return;}
+        try{const web=await fetchWeb();if(web.fact){show(web,today);return;}throw new Error();}catch{const fb=pickLocalFactForDate(today,LOCAL);show({fact:fb},today);}
       }
-      function showFact({ fact, source, link }, today) {
-        FACT_EL.textContent = fact;
-        if (META_EL && SOURCE_EL) {
-          if (source || link) {
-            SOURCE_EL.innerHTML = link ? `Source: ${link}${source || 'Link'}</a>` : `Source: ${source}`;
-            META_EL.hidden = false;
-          } else { META_EL.hidden = true; SOURCE_EL.textContent = ''; }
-        }
-        localStorage.setItem(LS_KEY_TEXT, fact); localStorage.setItem(LS_KEY_DATE, today);
-        localStorage.setItem(LS_KEY_SOURCE, source || ''); localStorage.setItem(LS_KEY_LINK, link || '');
-      }
-      async function loadFunFact(forceNew = false) {
-        const today = todayKey();
-        const savedDate = localStorage.getItem(LS_KEY_DATE); const savedText = localStorage.getItem(LS_KEY_TEXT);
-        const savedSource = localStorage.getItem(LS_KEY_SOURCE) || ''; const savedLink = localStorage.getItem(LS_KEY_LINK) || '';
-        if (!forceNew && savedDate === today && savedText) { showFact({ fact: savedText, source: savedSource, link: savedLink }, today); return; }
-        try { const web = await fetchFromWeb(); if (web.fact) { showFact(web, today); return; } throw new Error('Empty fact from web'); }
-        catch { const fallback = pickLocalFactForDate(today, LOCAL_FUN_FACTS); showFact({ fact: fallback, source: '', link: '' }, today); }
-      }
-      if (REFRESH_BTN) REFRESH_BTN.addEventListener('click', () => loadFunFact(true));
-      loadFunFact();
+      if(BTN) BTN.addEventListener('click',()=>load(true)); load();
     })();
   </script>
 
-  <!-- Fireworks Engine (Upward Launch, Transparent Overlay) + Milestones -->
+  <!-- Fireworks Engine (Upward) -->
   <script>
-    (function () {
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const canvas = document.getElementById('fx-canvas');
-      const ctx = canvas ? canvas.getContext('2d') : null;
-      if (!canvas || !ctx) return;
-
-      let W = window.innerWidth, H = window.innerHeight;
-      function resize() {
-        W = window.innerWidth; H = window.innerHeight;
-        canvas.width = Math.floor(W * devicePixelRatio);
-        canvas.height = Math.floor(H * devicePixelRatio);
-        ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-      }
-      resize();
-      window.addEventListener('resize', resize);
-
-      const particles = [];
-      let rafId = null;
-
-      function random(min, max) { return Math.random() * (max - min) + min; }
-      function randomInt(min, max) { return Math.floor(random(min, max + 1)); }
-      function randomColor() { const h = randomInt(0,360), s = randomInt(70,100), l = randomInt(45,65); return `hsl(${h}deg ${s}% ${l}%)`; }
-      function addParticle(p) { particles.push(p); if (!rafId) rafId = requestAnimationFrame(loop); }
-
-      function launchShell(opts = {}) {
-        const x = random(W * 0.15, W * 0.85), y = H + 4;
-        const color = opts.color ?? randomColor();
-        const vy0 = -random(9.5, 13.5), vx0 = random(-0.8, 0.8);
-        const gravity = 0.08, friction = 0.995, targetY = random(H * 0.3, H * 0.6);
-        addParticle({ kind:'shell', x, y, vx:vx0, vy:vy0, color, trailColor:color, gravity, friction, size:3.5, explodeY:targetY, exploded:false });
-      }
-      function explodeAt(x, y, opts={}) {
-        const count = opts.count ?? 48, speedMin = opts.speedMin ?? 2.2, speedMax = opts.speedMax ?? 5.4;
-        const color = opts.color ?? randomColor(); const gravity = 0.06, friction = 0.985;
-        for (let i=0;i<count;i++) {
-          const angle = random(-1.92, 1.92), speed = random(speedMin, speedMax);
-          addParticle({ kind:'spark', x, y, vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed, alpha:1, decay:random(0.012,0.02), size:random(2,4), color, gravity, friction });
+    (function(){
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const c = document.getElementById('fx-canvas'); const ctx = c?c.getContext('2d'):null; if(!c||!ctx) return;
+      let W=innerWidth,H=innerHeight; function rs(){W=innerWidth;H=innerHeight;c.width=Math.floor(W*devicePixelRatio);c.height=Math.floor(H*devicePixelRatio);ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);} rs(); addEventListener('resize',rs);
+      const P=[]; let RAF=null;
+      function r(a,b){return Math.random()*(b-a)+a;} function ri(a,b){return Math.floor(r(a,b+1));}
+      function rc(){return `hsl(${ri(0,360)}deg ${ri(70,100)}% ${ri(45,65)}%)`;}
+      function add(p){P.push(p); if(!RAF) RAF=requestAnimationFrame(loop);}
+      function launch(col){const x=r(W*0.15,W*0.85),y=H+4,color=col||rc(); add({k:'shell',x,y,vx:r(-0.8,0.8),vy:-r(9.5,13.5),g:0.08,f:0.995,sz:3.5,eY:r(H*0.3,H*0.6),ex:false,c:color,tc:color});}
+      function explode(x,y,opt){const n=opt?.n??48,sm=opt?.sm??2.2,sx=opt?.sx??5.4,color=opt?.c||rc(),g=0.06,f=0.985; for(let i=0;i<n;i++){const a=r(-1.92,1.92),s=r(sm,sx); add({k:'spark',x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,al:1,d:r(0.012,0.02),sz:r(2,4),c:color,g,f});} add({k:'flash',x,y,vx:0,vy:0,al:0.8,d:0.04,sz:24,c:color});}
+      function textFW(t){const fs=Math.max(56,Math.min(180,Math.floor(W*0.11))),x=W/2,y=Math.max(H*0.27,H*0.33),col=rc(); add({k:'text',t,x,y,c:col,al:1,d:0.012,fs,life:140}); const R=Math.min(W,H)*0.16,N=12; for(let i=0;i<N;i++){const a=(Math.PI*2)*(i/N); explode(x+Math.cos(a)*R,y+Math.sin(a)*R,{n:14,sm:1.6,sx:3.4,c:col});}}
+      function loop(){ctx.globalCompositeOperation='source-over'; ctx.clearRect(0,0,W,H); ctx.globalCompositeOperation='lighter';
+        for(let i=P.length-1;i>=0;i--){const p=P[i];
+          if(p.k==='text'){ctx.save();ctx.font=`800 ${p.fs}px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';const g=ctx.createLinearGradient(p.x-p.fs,p.y-p.fs,p.x+p.fs,p.y+p.fs);g.addColorStop(0,p.c);g.addColorStop(1,'#fff');ctx.fillStyle=g;ctx.globalAlpha=Math.max(0,p.al);ctx.fillText(p.t,p.x,p.y);ctx.restore();p.life--;p.al-=p.d*0.6;if(p.life<=0||p.al<=0)P.splice(i,1);continue;}
+          if(p.k==='flash'){ctx.save();ctx.globalAlpha=Math.max(0,p.al);ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fillStyle=p.c;ctx.fill();ctx.restore();p.al-=p.d;if(p.al<=0)P.splice(i,1);continue;}
+          if(p.k==='shell'){const ts=r(1.6,2.8); add({k:'trail',x:p.x,y:p.y,vx:r(-0.2,0.2),vy:r(0.2,0.6),al:0.8,d:0.03,sz:ts,c:p.tc}); p.vx*=p.f; p.vy=p.vy*p.f+p.g; p.x+=p.vx; p.y+=p.vy; ctx.save();ctx.globalAlpha=1;ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fillStyle=p.c;ctx.fill();ctx.restore(); if(!p.ex && (p.y<=p.eY || p.vy>=-0.2)){p.ex=true; explode(p.x,p.y,{c:p.c}); P.splice(i,1); continue;} if(p.y<-50||p.x<-50||p.x>W+50)P.splice(i,1); continue;}
+          if(p.k==='trail'){ctx.save();ctx.globalAlpha=Math.max(0,p.al);ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fillStyle=p.c;ctx.fill();ctx.restore();p.x+=p.vx;p.y+=p.vy;p.al-=p.d;if(p.al<=0)P.splice(i,1);continue;}
+          if(p.k==='spark'){p.vx*=p.f;p.vy=p.vy*p.f+p.g;p.x+=p.vx;p.y+=p.vy;p.al-=p.d;ctx.save();ctx.globalAlpha=Math.max(0,p.al);ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fillStyle=p.c;ctx.fill();ctx.restore(); if(p.al<=0||p.x<-60||p.x>W+60||p.y>H+60)P.splice(i,1);continue;}
         }
-        addParticle({ kind:'flash', x, y, vx:0, vy:0, alpha:0.8, decay:0.04, size:24, color });
+        if(P.length>0){RAF=requestAnimationFrame(loop);}else{cancelAnimationFrame(RAF);RAF=null;ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,W,H);}
       }
-      function textFirework(text, opts={}) {
-        const fontSize = Math.max(56, Math.min(180, Math.floor(W*0.11)));
-        const color = opts.color ?? randomColor(); const x = W/2, y = Math.max(H*0.27, H*0.33);
-        addParticle({ kind:'text', text, x, y, color, alpha:1, decay:0.012, textSize:fontSize, life:140 });
-        const radius = Math.min(W,H)*0.16, count = 12;
-        for (let i=0;i<count;i++) {
-          const angle = (Math.PI*2)*(i/count);
-          explodeAt(x+Math.cos(angle)*radius, y+Math.sin(angle)*radius, { count:14, speedMin:1.6, speedMax:3.4, color });
-        }
-      }
-
-      function loop() {
-        ctx.globalCompositeOperation='source-over'; ctx.clearRect(0,0,W,H); ctx.globalCompositeOperation='lighter';
-        for (let i=particles.length-1;i>=0;i--) {
-          const p = particles[i];
-          if (p.kind==='text') {
-            ctx.save(); ctx.font=`800 ${p.textSize}px system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif`;
-            ctx.textAlign='center'; ctx.textBaseline='middle';
-            const g=ctx.createLinearGradient(p.x-p.textSize,p.y-p.textSize,p.x+p.textSize,p.y+p.textSize);
-            g.addColorStop(0,p.color); g.addColorStop(1,'#fff'); ctx.fillStyle=g; ctx.globalAlpha=Math.max(0,p.alpha);
-            ctx.fillText(p.text,p.x,p.y); ctx.restore(); p.life--; p.alpha-=p.decay*0.6;
-            if (p.life<=0||p.alpha<=0) particles.splice(i,1); continue;
-          }
-          if (p.kind==='flash') {
-            ctx.save(); ctx.globalAlpha=Math.max(0,p.alpha); ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill(); ctx.restore();
-            p.alpha-=p.decay; if (p.alpha<=0) particles.splice(i,1); continue;
-          }
-          if (p.kind==='shell') {
-            const trailSize = Math.random()*(2.8-1.6)+1.6;
-            addParticle({ kind:'trail', x:p.x, y:p.y, vx:Math.random()*0.4-0.2, vy:Math.random()*0.4+0.2, alpha:0.8, decay:0.03, size:trailSize, color:p.trailColor });
-            p.vx*=p.friction; p.vy=p.vy*p.friction+p.gravity; p.x+=p.vx; p.y+=p.vy;
-            ctx.save(); ctx.globalAlpha=1; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill(); ctx.restore();
-            if (!p.exploded && (p.y<=p.explodeY || p.vy>=-0.2)) { p.exploded=true; explodeAt(p.x,p.y,{color:p.color}); particles.splice(i,1); continue; }
-            if (p.y<-50||p.x<-50||p.x>W+50) particles.splice(i,1); continue;
-          }
-          if (p.kind==='trail') {
-            ctx.save(); ctx.globalAlpha=Math.max(0,p.alpha); ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill(); ctx.restore();
-            p.x+=p.vx; p.y+=p.vy; p.alpha-=p.decay; if (p.alpha<=0) particles.splice(i,1); continue;
-          }
-          if (p.kind==='spark') {
-            p.vx*=p.friction; p.vy=p.vy*p.friction+p.gravity; p.x+=p.vx; p.y+=p.vy; p.alpha-=p.decay;
-            ctx.save(); ctx.globalAlpha=Math.max(0,p.alpha); ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill(); ctx.restore();
-            if (p.alpha<=0||p.x<-60||p.x>W+60||p.y>H+60) particles.splice(i,1); continue;
-          }
-        }
-        if (particles.length>0) { rafId=requestAnimationFrame(loop); } else { cancelAnimationFrame(rafId); rafId=null; ctx.globalCompositeOperation='source-over'; ctx.clearRect(0,0,W,H); }
-      }
-
-      function singleFirework(){ launchShell({color:randomColor()}); }
-      function threeFireworks(){ launchShell({color:randomColor()}); setTimeout(()=>launchShell({color:randomColor()}),120); setTimeout(()=>launchShell({color:randomColor()}),240); }
-      function barrage(n){ const b=randomInt(8,12); for(let i=0;i<b;i++) setTimeout(()=>launchShell({color:randomColor()}),i*80); setTimeout(()=>textFirework(String(n),{color:randomColor()}),b*80+600); }
-
-      window.__fxMilestoneTrigger = function(totalClicks){
-        if (reduceMotion) return;
-        if (totalClicks>0 && totalClicks%100===0) barrage(totalClicks);
-        else if (totalClicks>0 && totalClicks%50===0) threeFireworks();
-        else if (totalClicks>0 && totalClicks%10===0) singleFirework();
-      };
+      function single(){launch();} function trio(){launch();setTimeout(launch,120);setTimeout(launch,240);} function barrage(n){const b=ri(8,12);for(let i=0;i<b;i++)setTimeout(launch,i*80);setTimeout(()=>textFW(String(n)),b*80+600);}
+      function launch(){if(reduce) return; launchCol();} function launchCol(col){if(reduce)return; launch(col);}
+      window.__fxMilestoneTrigger=function(n){ if(reduce)return; if(n>0&&n%100===0)barrage(n); else if(n>0&&n%50===0)trio(); else if(n>0&&n%10===0)single(); };
     })();
   </script>
 
-  <!-- Firebase (Firestore) integration: GLOBAL "Assessors Served" -->
+  <!-- Firebase global counter -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    /* Replace with your Firebase config if needed */
     const firebaseConfig = {
       apiKey: "AIzaSyAdWZbXTya8eiwaL-pgzxST52MuvyK4aK4",
       authDomain: "assessorcounterglobal.firebaseapp.com",
@@ -630,34 +418,20 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
     const viewsEl = document.getElementById('page-views-count');
     const statusEl = document.getElementById('views-status');
-
     const counterRef = doc(db, 'metrics', 'assessorsServed');
 
-    async function ensureCounterExists() {
-      try { const snap = await getDoc(counterRef); if (!snap.exists()) await setDoc(counterRef, { count: 0 }); }
-      catch (e) { console.warn('Ensure counter failed:', e); }
-    }
-    async function incrementGlobal() {
-      try { await updateDoc(counterRef, { count: increment(1) }); statusEl.textContent = ' (global)'; }
-      catch (e) {
-        if (e && e.code === 'not-found') { await setDoc(counterRef, { count: 1 }); statusEl.textContent = ' (global)'; }
-        else {
-          console.warn('Global increment failed; showing local count.', e);
-          const key = 'pageViewsLocal'; const n = parseInt(localStorage.getItem(key) || '0', 10) + 1;
-          localStorage.setItem(key, String(n)); viewsEl.textContent = n.toLocaleString(); statusEl.textContent = ' (local)';
-        }
+    async function ensureCounterExists(){ try{ const s=await getDoc(counterRef); if(!s.exists()) await setDoc(counterRef,{count:0}); }catch(e){ console.warn('Ensure counter failed:',e); } }
+    async function incrementGlobal(){
+      try{ await updateDoc(counterRef,{count:increment(1)}); statusEl.textContent=' (global)'; }
+      catch(e){
+        if(e && e.code==='not-found'){ await setDoc(counterRef,{count:1}); statusEl.textContent=' (global)'; }
+        else { console.warn('Global increment failed; showing local count.',e); const k='pageViewsLocal'; const n=parseInt(localStorage.getItem(k)||'0',10)+1; localStorage.setItem(k,String(n)); viewsEl.textContent=n.toLocaleString(); statusEl.textContent=' (local)'; }
       }
     }
-    onSnapshot(counterRef, (snap) => {
-      const data = snap.data();
-      if (data && typeof data.count === 'number') { viewsEl.textContent = data.count.toLocaleString(); if (!statusEl.textContent) statusEl.textContent = ' (global)'; }
-    }, (err) => console.warn('Snapshot listen failed:', err));
-
-    await ensureCounterExists();
-    await incrementGlobal();
+    onSnapshot(counterRef,(snap)=>{ const d=snap.data(); if(d&&typeof d.count==='number'){ viewsEl.textContent=d.count.toLocaleString(); if(!statusEl.textContent) statusEl.textContent=' (global)'; } },(err)=>console.warn('Snapshot failed:',err));
+    await ensureCounterExists(); await incrementGlobal();
   </script>
 </body>
 </html>
