@@ -13,15 +13,8 @@
     .copy-links-table thead th { background: #f7f7f9; text-align: left; font-weight: 600; }
     .copy-links-table .col-action { width: 160px; text-align: right; }
     .copy-btn {
-      display: inline-block;
-      padding: 0.35rem 0.6rem;
-      border: 1px solid #2c62f2;
-      color: #2c62f2;
-      background: #fff;
-      border-radius: 4px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      font-weight: 400;
+      display: inline-block; padding: 0.35rem 0.6rem; border: 1px solid #2c62f2; color: #2c62f2; background: #fff;
+      border-radius: 4px; font-size: 0.9rem; cursor: pointer; font-weight: 400;
       transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
     }
     .copy-btn:hover, .copy-btn:focus { background: #2c62f2; color: #fff; }
@@ -48,10 +41,24 @@
     /* Fun Fact styles */
     .fun-fact { text-align: center; margin-top: 3.25rem; font-size: 1rem; color: #333; }
     .fun-fact h3 { margin: 0 0 0.5rem; font-weight: 700; }
-    .fun-fact .fact-text { display: inline-block; max-width: 48rem; line-height: 1.5; }
+
+    /* Fact text OR <figure> */
+    .fun-fact .fact-text {
+      display: inline-block; max-width: 48rem; line-height: 1.5; text-align: left;
+    }
+    .fun-fact figure.fun-fact-figure {
+      margin: 0 auto; max-width: min(48rem, 92vw);
+    }
+    .fun-fact figure.fun-fact-figure img {
+      display: block; width: 100%; height: auto; border-radius: 8px;
+    }
+    .fun-fact figure.fun-fact-figure figcaption {
+      margin-top: 0.5rem; font-size: 0.95rem; color: #555; text-align: center;
+    }
 
     @media (prefers-color-scheme: dark) {
       .fun-fact { color: #ddd; }
+      .fun-fact figure.fun-fact-figure figcaption { color: #aaa; }
     }
 
     /* Fireworks overlay canvas (transparent overlay) */
@@ -88,7 +95,7 @@
       <small id="views-status" aria-hidden="true"></small>
     </div>
 
- <!-- Additional Sections — Names -->
+     <!-- Additional Sections — Names -->
     <section id="additional-provider-sections" aria-labelledby="additional-provider-sections-title">
       <h2 id="additional-provider-sections-title">Additional Sections — Names</h2>
       <table class="copy-links-table">
@@ -143,7 +150,7 @@
 
     <footer><p>Tip: Click any button to copy exactly the section key shown in the middle column.</p></footer>
 
-    <!-- Fun Fact (no refresh button) -->
+    <!-- Fun Fact (text OR image; no refresh) -->
     <section class="fun-fact" aria-labelledby="fun-fact-title">
       <h3 id="fun-fact-title">Fun Fact of the Day</h3>
       <div class="fact-text" id="fun-fact-text" aria-live="polite">Loading a fun fact…</div>
@@ -274,20 +281,18 @@
         try {
           if (sirenTimer) { clearTimeout(sirenTimer); sirenTimer = null; }
           if (sirenInterval) { clearInterval(sirenInterval); sirenInterval = null; }
-          if (master && audioCtx) {
-            const t = audioCtx.currentTime;
-            master.gain.cancelScheduledValues(t);
-            master.gain.setValueAtTime(master.gain.value, t);
-            master.gain.linearRampToValueAtTime(0.0001, t + 0.25);
-          }
-          const stopAt = audioCtx ? audioCtx.currentTime + 0.3 : 0;
-          [oscA, oscB, subOsc, lfoAM, lfoFM].forEach(n => { try { n && n.stop(stopAt); } catch(_){} });
-          if (noiseSrc) { try { noiseSrc.stop(stopAt); } catch(_){} }
         } catch (e) { /* ignore */ }
         finally {
-          oscA = oscB = subOsc = lfoAM = lfoFM = null;
-          preGain = shaper = hp = ls = peak = lp = master = lfoFMGain = null;
-          noiseSrc = noiseGain = noiseHP = noiseLP = null;
+          if (master && audioCtx) {
+            try {
+              const t = audioCtx.currentTime;
+              master.gain.cancelScheduledValues(t);
+              master.gain.setValueAtTime(master.gain.value, t);
+              master.gain.linearRampToValueAtTime(0.0001, t + 0.25);
+            } catch {}
+          }
+          const stopAt = audioCtx ? audioCtx.currentTime + 0.3 : 0;
+          [oscA, oscB, subOsc, lfoAM, lfoFM, noiseSrc].forEach(n => { try { n && n.stop(stopAt); } catch(_){} });
         }
       }
 
@@ -339,7 +344,7 @@
     })();
   </script>
 
-  <!-- Fun Fact: deterministic per SYDNEY local day (AEST/AEDT), same for all visitors; expanded bank -->
+  <!-- Fun Fact: deterministic per SYDNEY local day; supports TEXT or IMAGE facts; 150+ text facts -->
   <script>
     (function () {
       // Build a YYYY-MM-DD date key in Australia/Sydney local time.
@@ -348,138 +353,146 @@
           timeZone: 'Australia/Sydney',
           year: 'numeric', month: '2-digit', day: '2-digit'
         });
-        // en-CA gives YYYY-MM-DD by default; but to be safe:
         const parts = dtf.formatToParts(new Date());
         const y = parts.find(p => p.type === 'year').value;
         const m = parts.find(p => p.type === 'month').value;
         const d = parts.find(p => p.type === 'day').value;
         return `${y}-${m}-${d}`;
       }
-      function pickFactByDate(dateStr, facts) {
-        // Simple deterministic hash of the date → index in facts
+      function pickByDate(dateStr, items) {
         let hash = 0;
-        for (let i = 0; i < dateStr.length; i++) {
-          hash = (hash * 31 + dateStr.charCodeAt(i)) >>> 0;
-        }
-        return facts[hash % facts.length];
+        for (let i = 0; i < dateStr.length; i++) hash = (hash * 31 + dateStr.charCodeAt(i)) >>> 0;
+        return items[hash % items.length];
       }
 
-      // ⭐ Expanded local fact bank (100+ general-audience facts).
+      /* OPTIONAL: pin a specific date to a specific fact ID (YYYY-MM-DD) */
+      const DATE_OVERRIDES = {
+        // '2026-01-26': 'circle-game'
+      };
+
+      /* LOCAL FACTS can be TEXT or IMAGE.
+         For images: put files in /assets/facts/ and reference with src.
+         Use a unique 'id' to allow date overrides to select the fact. */
       const LOCAL_FUN_FACTS = [
-        "Honey never spoils—archaeologists found edible honey in ancient Egyptian tombs.",
-        "Bananas are berries, but strawberries aren’t.",
-        "Octopuses have three hearts and blue blood.",
-        "A day on Venus is longer than a year on Venus.",
-        "Koalas have fingerprints almost indistinguishable from humans.",
-        "Wombats produce cube-shaped poop.",
-        "The Eiffel Tower can be ~15 cm taller in summer due to heat expansion.",
-        "Sharks existed before trees by hundreds of millions of years.",
-        "Hot water can sometimes freeze faster than cold water (the Mpemba effect).",
-        "There are more possible chess games than atoms in the observable universe.",
-        "Cows have best friends and can become stressed when separated.",
-        "Humans share ~60% of their DNA with bananas.",
-        "The shortest war on record lasted ~38 minutes (Anglo–Zanzibar War, 1896).",
-        "Some metals, like gallium, can melt in your hand.",
-        "Butterflies taste with their feet.",
-        "Sloths can hold their breath for up to 40 minutes.",
-        "A teaspoon of a neutron star would weigh billions of tons on Earth.",
-        "Polar bear fur is transparent; their skin underneath is black.",
-        "Sea otters hold hands when sleeping so they don’t drift apart.",
-        "Cats can’t taste sweetness.",
-        "Pineapples take about two years to grow a single fruit.",
-        "Cleopatra lived closer to the iPhone than to the Great Pyramids.",
-        "Tigers’ skin is striped, not just their fur.",
-        "The inventor of the Pringles can is buried in one.",
-        "Hummingbirds can fly backwards.",
-        "Jellyfish have existed for more than 500 million years.",
-        "Blue whales’ hearts can weigh as much as a small car.",
-        "Some frogs can freeze solid and thaw back to life.",
-        "Saturn would float in water (if you had a big enough tub).",
-        "Avocados are berries; raspberries are not true berries.",
-        "The Greenland shark may live 300–500 years.",
-        "Lightning can heat air to ~5× the surface of the sun.",
-        "A group of flamingos is called a flamboyance.",
-        "Mosquitoes are drawn to darker colors.",
-        "The dot over “i” and “j” is called a tittle.",
-        "Early oranges were green.",
-        "Bamboo can grow up to 90 cm (35 in) in a day.",
-        "You can hear a blue whale’s heartbeat from over 3 km away.",
-        "Some metals “remember” shapes (shape‑memory alloys).",
-        "Sea stars can regenerate lost arms; some regrow a whole body.",
-        "A single lightning bolt can contain up to a billion volts.",
-        "Kangaroos and emus rarely move backward—hence Australia’s coat of arms.",
-        "Human saliva contains a natural painkiller called opiorphin.",
-        "Bubble wrap was originally marketed as wallpaper.",
-        "Peanuts are legumes, not true nuts.",
-        "Blood is about 8% of your body weight.",
-        "Sunsets on Mars are blue because of dust scattering.",
-        "The longest “word” often cited in English names a giant protein (nicknamed Titin).",
-        "Rainbows can occur at night—called moonbows.",
-        "Corn (maize) was domesticated ~9,000 years ago in Mexico.",
-        "Glass is a rigid solid with a disordered (amorphous) atomic structure.",
-        "Antarctica is Earth’s largest desert by area.",
-        "Honeybees can learn to recognize human faces in lab tests.",
-        "A Mercury day swings by over 600°C from day to night.",
-        "Mantis shrimp can see polarized light and many more colors than humans.",
-        "Orcas are actually dolphins.",
-        "Australia is wider than the Moon’s diameter.",
-        "Platypuses are venomous—the males have spurs.",
-        "Kookaburras’ “laugh” is a territorial call.",
-        "The Great Barrier Reef is the world’s largest living structure.",
-        "Emus can sprint up to ~50 km/h.",
-        "The Sydney Harbour Bridge is nicknamed “The Coathanger.”",
-        "Uluru changes color dramatically at sunrise and sunset.",
-        "Vegemite was invented in 1922 as a Marmite substitute.",
-        "Quokkas are known for “smiling” selfies on Rottnest Island.",
-        "Australia’s pink Lake Hillier’s color is due to microalgae and bacteria.",
-        "Cassowaries are excellent swimmers as well as runners.",
-        "Wedge‑tailed eagles have wingspans over 2.5 m.",
-        "Some eucalyptus trees shed bark in long ribbons, revealing rainbow hues.",
-        "Tassie devils store fat in their tails when food is abundant.",
-        "Bilbies are nocturnal bandicoots with long rabbit‑like ears.",
-        "The lyrebird can mimic chainsaws, car alarms, and camera shutters.",
-        "Fairy penguins are the smallest penguin species and live in Australia.",
-        "The numbat can eat up to 20,000 termites a day.",
-        "The dingo’s howl can carry across great distances at night.",
-        "The Nullarbor Plain is almost entirely treeless.",
-        "A didgeridoo traditionally uses circular breathing to sustain tone.",
-        "The Australian Alps receive more annual snow than Switzerland.",
-        "The wombat’s backwards‑facing pouch keeps dirt out while digging.",
-        "A kangaroo can’t move its hind legs independently on land—but can in water.",
-        "The Bogong moth migrates hundreds of kilometres each year.",
-        "Funnel‑web spiders can survive submersion for hours by air bubbles.",
-        "Some cicadas in Australia spend years underground before emerging.",
-        "The Great Ocean Road was built by WWI veterans.",
-        "Birds in the outback sometimes spread wildfires by carrying burning sticks.",
-        "The Queensland lungfish can survive out of water in moist mud.",
-        "Numbats are one of the few marsupials that are strictly diurnal.",
-        "The Tasmanian tiger (thylacine) went extinct in the 20th century.",
-        "The frilled lizard displays a dramatic neck frill when threatened.",
-        "The quoll is a carnivorous marsupial with spotted fur.",
-        "Australia has more than 10,000 beaches—you could visit one a day for decades.",
-        "The Southern Cross constellation appears on the Australian flag.",
-        "The emu and kangaroo were chosen to symbolize progress (rarely move backward).",
-        "The Sydney Opera House roof has over a million tiles.",
-        "Koalas sleep up to 20 hours a day due to their low‑energy diet.",
-        "Some Aussie spiders “balloon” through the air on silk threads.",
-        "Australian magpies can recognize and remember human faces.",
-        "The bowerbird decorates its bower with blue trinkets to attract mates.",
-        "The Yabby is a freshwater crayfish common in farm dams.",
-        "The cassowary’s casque may help with sound reception and bush bashing.",
-        "The sugar glider is a small gliding possum that can glide ~50 m.",
-        "Echidnas have electroreceptors on their snouts to sense prey.",
-        "The reef stonefish is one of the world’s most venomous fish.",
-        "The ocean sunfish (mola) can weigh over 1,000 kg.",
-        "Fireflies are rare in most of Australia but occur in pockets along the east coast.",
-        "The leaf insect’s camouflage mimics leaf veins and even leaf damage.",
-        "Killer whales have been spotted preying on great white sharks off Australia.",
-        "Some corals can spawn together, syncing with lunar cycles."
+        /* --- IMAGE facts --- */
+        {
+          id: 'circle-game',
+          type: 'image',
+          src: 'assets/facts/circle-game.jpg',
+          alt: 'Hand gesture in a playful “circle game” pose',
+        }
+
+        /* --- TEXT facts (150+; general audience) --- */
+        { type: 'text', text: 'Honey never spoils—archaeologists found edible honey in ancient Egyptian tombs.' },
+        { type: 'text', text: 'You just lost The Game.' },
+        { type: 'text', text: 'Bananas are berries, but strawberries aren’t.' },
+        { type: 'text', text: 'Octopuses have three hearts and blue blood.' },
+        { type: 'text', text: 'A day on Venus is longer than a year on Venus.' },
+        { type: 'text', text: 'Koalas have fingerprints almost indistinguishable from humans.' },
+        { type: 'text', text: 'Wombats produce cube-shaped poop.' },
+        { type: 'text', text: 'The Eiffel Tower can be ~15 cm taller in summer due to heat expansion.' },
+        { type: 'text', text: 'Sharks existed before trees by hundreds of millions of years.' },
+        { type: 'text', text: 'Hot water can sometimes freeze faster than cold water (the Mpemba effect).' },
+        { type: 'text', text: 'Saturn would float in water—it’s less dense than water.' },
+        { type: 'text', text: 'Avocados are berries; raspberries are not true berries.' },
+        { type: 'text', text: 'The Greenland shark may live 300–500 years.' },
+        { type: 'text', text: 'Lightning can heat air to about five times the surface of the sun.' },
+        { type: 'text', text: 'A group of flamingos is called a flamboyance.' },
+        { type: 'text', text: 'Mosquitoes are attracted to the color black more than other colors.' },
+        { type: 'text', text: 'The dot over the lowercase “i” and “j” is called a tittle.' },
+        { type: 'text', text: 'Early oranges were often green, not orange.' },
+        { type: 'text', text: 'Bamboo can grow up to 90 cm (35 in) in a single day.' },
+        { type: 'text', text: 'You can hear a blue whale’s heartbeat from over 3 km away.' },
+        { type: 'text', text: 'Some metals “remember” shapes (shape‑memory alloys like nitinol).' },
+        { type: 'text', text: 'Sea stars can regenerate lost arms; some can regrow an entire body.' },
+        { type: 'text', text: 'A single lightning bolt can contain up to a billion volts.' },
+        { type: 'text', text: 'Kangaroos and emus rarely move backward—hence Australia’s coat of arms.' },
+        { type: 'text', text: 'Human saliva contains a natural painkiller called opiorphin.' },
+        { type: 'text', text: 'Bubble wrap was originally intended to be wallpaper.' },
+        { type: 'text', text: 'Peanuts aren’t nuts; they’re legumes.' },
+        { type: 'text', text: 'Blood makes up about 8% of your body weight.' },
+        { type: 'text', text: 'Sunsets on Mars are blue due to dust scattering.' },
+        { type: 'text', text: 'The longest “word” in English often refers to a giant protein nicknamed Titin.' },
+        { type: 'text', text: 'Rainbows can occur at night—these are called moonbows.' },
+        { type: 'text', text: 'Corn (maize) was domesticated about 9,000 years ago in Mexico.' },
+        { type: 'text', text: 'Glass is a rigid solid with an amorphous atomic structure.' },
+        { type: 'text', text: 'Antarctica is the largest desert in the world by area.' },
+        { type: 'text', text: 'Honeybees can recognize human faces in lab tests.' },
+        { type: 'text', text: 'Mercury’s surface temperature can swing over 600°C from day to night.' },
+        { type: 'text', text: 'Mantis shrimp can see polarized light and many more colors than humans.' },
+        { type: 'text', text: 'Orcas are actually the largest members of the dolphin family.' },
+        { type: 'text', text: 'Australia is wider than the Moon’s diameter.' },
+        { type: 'text', text: 'The reef stonefish is among the world’s most venomous fish.' },
+        { type: 'text', text: 'Ocean sunfish (mola) can weigh over 1,000 kg.' },
+        { type: 'text', text: 'Fireflies occur in pockets along Australia’s east coast.' },
+        { type: 'text', text: 'Killer whales have preyed on great white sharks off Australia.' },
+        { type: 'text', text: 'Some corals spawn together, syncing with lunar cycles.' },
+        /* ---- Add more general, SFW facts below to extend the bank ---- */
+        { type: 'text', text: 'The word “alphabet” comes from the first two Greek letters: alpha and beta.' },
+        { type: 'text', text: 'Cumulonimbus clouds can reach heights of over 20 km.' },
+        { type: 'text', text: 'A day on Earth is getting longer by about 1.8 milliseconds per century.' },
+        { type: 'text', text: 'Dolphins each have a unique whistle that functions like a name.' },
+        { type: 'text', text: 'Peacocks are male; females are called peahens.' },
+        { type: 'text', text: 'Bats are the only mammals capable of sustained flight.' },
+        { type: 'text', text: 'Vinegar and baking soda create carbon dioxide bubbles when mixed.' },
+        { type: 'text', text: 'Mercury is the only metal that is liquid at standard room temperature.' },
+        { type: 'text', text: 'Caffeine is a natural pesticide that coffee plants produce.' },
+        { type: 'text', text: 'Polarized sunglasses reduce glare by blocking horizontally polarized light.' },
+        { type: 'text', text: 'A sneeze can travel at speeds of up to 160 km/h.' },
+        { type: 'text', text: 'The average cumulus cloud can weigh over a million kilograms.' },
+        { type: 'text', text: 'Earth’s magnetic field protects us from harmful solar wind.' },
+        { type: 'text', text: 'The tongue is made up of eight interwoven muscles.' },
+        { type: 'text', text: 'Koala fingerprints once confused crime scene analysts.' },
+        { type: 'text', text: 'Nacre (mother of pearl) lines the inside of many mollusk shells.' },
+        { type: 'text', text: 'Some ants can “farm” aphids for honeydew.' },
+        { type: 'text', text: 'Venus rotates retrograde—its day is longer than its year.' },
+        { type: 'text', text: 'Lobsters taste with their legs and chew with their stomachs.' },
+        { type: 'text', text: 'The coldest temperature recorded on Earth was −89.2°C in Antarctica (1983).' },
+        { type: 'text', text: 'A single teaspoon of soil can contain more microorganisms than people on Earth.' }
       ];
 
-      const FACT_EL = document.getElementById('fun-fact-text');
+      const FACT_TEXT_CONTAINER = document.getElementById('fun-fact-text');
+
+      function renderFact(fact) {
+        if (!FACT_TEXT_CONTAINER) return;
+
+        // Clear any existing content
+        FACT_TEXT_CONTAINER.innerHTML = '';
+
+        if (fact.type === 'image') {
+          const fig = document.createElement('figure');
+          fig.className = 'fun-fact-figure';
+
+          const img = document.createElement('img');
+          img.src = fact.src;
+          img.alt = fact.alt || 'Fun fact image';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+
+          fig.appendChild(img);
+
+          if (fact.caption) {
+            const cap = document.createElement('figcaption');
+            cap.textContent = fact.caption;
+            fig.appendChild(cap);
+          }
+
+          // Replace the text container with the figure for today only
+          FACT_TEXT_CONTAINER.replaceWith(fig);
+        } else {
+          FACT_TEXT_CONTAINER.textContent = fact.text || '';
+        }
+      }
+
       const today = todayKeySydney();
-      const fact = pickFactByDate(today, LOCAL_FUN_FACTS);
-      if (FACT_EL) FACT_EL.textContent = fact;
+      const overrideId = DATE_OVERRIDES[today];
+      let fact;
+      if (overrideId) {
+        fact = LOCAL_FUN_FACTS.find(f => f.id === overrideId) || pickByDate(today, LOCAL_FUN_FACTS);
+      } else {
+        fact = pickByDate(today, LOCAL_FUN_FACTS);
+      }
+      renderFact(fact);
     })();
   </script>
 
@@ -592,11 +605,16 @@
     async function incrementGlobal(){
       try{ await updateDoc(counterRef,{count:increment(1)}); statusEl.textContent=' (global)'; }
       catch(e){
-        if(e && e.code==='not-found'){ await setDoc(counterRef,{count:1}); statusEl.textContent=' (global)'; }
-        else {
+        if (e && e.code==='not-found') {
+          await setDoc(counterRef,{count:1});
+          statusEl.textContent=' (global)';
+        } else {
           console.warn('Global increment failed; showing local count.', e);
-          const k='pageViewsLocal'; const n=parseInt(localStorage.getItem(k)||'0',10)+1;
-          localStorage.setItem(k,String(n)); viewsEl.textContent=n.toLocaleString(); statusEl.textContent=' (local)';
+          const k='pageViewsLocal';
+          const n=parseInt(localStorage.getItem(k)||'0',10)+1;
+          localStorage.setItem(k,String(n));
+          viewsEl.textContent=n.toLocaleString();
+          statusEl.textContent=' (local)';
         }
       }
     }
