@@ -49,17 +49,9 @@
     .fun-fact { text-align: center; margin-top: 3.25rem; font-size: 1rem; color: #333; }
     .fun-fact h3 { margin: 0 0 0.5rem; font-weight: 700; }
     .fun-fact .fact-text { display: inline-block; max-width: 48rem; line-height: 1.5; }
-    .fun-fact .fun-fact-actions { margin-top: 0.5rem; }
-    .fun-fact .fun-fact-actions button {
-      appearance: none; border: 1px solid #ccc; background: #fafafa; color: #222;
-      padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem;
-    }
-    .fun-fact .fun-fact-actions button:hover { background: #f0f0f0; }
 
     @media (prefers-color-scheme: dark) {
       .fun-fact { color: #ddd; }
-      .fun-fact .fun-fact-actions button { border-color: #444; background: #1e1e1e; color: #eee; }
-      .fun-fact .fun-fact-actions button:hover { background: #2a2a2a; }
     }
 
     /* Fireworks overlay canvas (transparent overlay) */
@@ -96,7 +88,7 @@
       <small id="views-status" aria-hidden="true"></small>
     </div>
 
-    <!-- Additional Sections — Names -->
+ <!-- Additional Sections — Names -->
     <section id="additional-provider-sections" aria-labelledby="additional-provider-sections-title">
       <h2 id="additional-provider-sections-title">Additional Sections — Names</h2>
       <table class="copy-links-table">
@@ -151,16 +143,13 @@
 
     <footer><p>Tip: Click any button to copy exactly the section key shown in the middle column.</p></footer>
 
-    <!-- Fun Fact -->
+    <!-- Fun Fact (no refresh button) -->
     <section class="fun-fact" aria-labelledby="fun-fact-title">
       <h3 id="fun-fact-title">Fun Fact of the Day</h3>
       <div class="fact-text" id="fun-fact-text" aria-live="polite">Loading a fun fact…</div>
-      <div class="fun-fact-actions">
-        <button type="button" id="fun-fact-refresh" aria-label="Get a new fun fact">🔄 Refresh fact</button>
-      </div>
     </section>
 
-    <!-- Prank button -->
+    <!-- “40 spaces” below fun fact: the prank button -->
     <div class="prank-btn-wrapper">
       <button type="button" id="do-not-click" class="prank-btn">Do not click this >.></button>
     </div>
@@ -189,8 +178,7 @@
       function updateClicksUI(n) { const el = document.getElementById('total-clicks-count'); if (el) el.textContent = n.toLocaleString(); }
       initClicks();
 
-      /* ===== SEWS-style siren (lower top end, fast wail, civil-warning timbre) =====
-         This approximates the broadcast SEWS wail (played ~10s before urgent messages).  */
+      /* ===== SEWS-style siren (lower top end, fast wail, civil-warning timbre) ===== */
       let audioCtx = null;
       let oscA = null, oscB = null, subOsc = null;
       let noiseBuf = null, noiseSrc = null, noiseGain = null, noiseHP = null, noiseLP = null;
@@ -221,46 +209,35 @@
 
           const now = audioCtx.currentTime;
 
-          /* SEWS-like sweep window & speed:
-             - Lower top end: ~650–700 Hz
-             - Deep base: ~340–380 Hz
-             - Faster triangular “wail”: ~0.6 s per half-cycle  */
-          const fLow = 360;         // base (≈civil alarm band)
-          const fHigh = 680;        // LOWER TOP END for Australian warning “wail”
-          const halfSweep = 0.6;    // faster oscillation
+          const fLow = 360;
+          const fHigh = 680;
+          const halfSweep = 0.6;
           const baseOut = prefersReducedMotion ? 0.045 : 0.14;
 
-          /* Voices: square + saw (bite), plus sub octave for weight */
           oscA = audioCtx.createOscillator(); oscA.type = 'square';  oscA.frequency.setValueAtTime(fLow, now);
           oscB = audioCtx.createOscillator(); oscB.type = 'sawtooth'; oscB.frequency.setValueAtTime(fLow * 1.02, now);
           subOsc = audioCtx.createOscillator(); subOsc.type = 'square'; subOsc.frequency.setValueAtTime(fLow * 0.5, now);
 
-          /* Drive + distortion -> gritty horn timbre */
           preGain = audioCtx.createGain(); preGain.gain.setValueAtTime(3.3, now);
           shaper = audioCtx.createWaveShaper(); shaper.curve = makeDistortionCurve(190); shaper.oversample = '4x';
 
-          /* Filter stack: highpass (clean), lowshelf (weight), peaking (bite), lowpass (tame fizz) */
           hp = audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(40, now); hp.Q.setValueAtTime(0.7, now);
           ls = audioCtx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.setValueAtTime(220, now); ls.gain.setValueAtTime(7.5, now);
           peak = audioCtx.createBiquadFilter(); peak.type='peaking'; peak.frequency.setValueAtTime(1100, now); peak.Q.setValueAtTime(1.25, now); peak.gain.setValueAtTime(9, now);
           lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(3300, now); lp.Q.setValueAtTime(0.9, now);
 
-          /* Master gain */
           master = audioCtx.createGain(); master.gain.setValueAtTime(0.0001, now); master.gain.linearRampToValueAtTime(baseOut, now + 0.25);
 
-          /* LFOs: faster AM/FM for urgency */
           lfoAM = audioCtx.createOscillator(); lfoAM.type='sine'; lfoAM.frequency.setValueAtTime(5.2, now);
           lfoFM = audioCtx.createOscillator(); lfoFM.type='sine'; lfoFM.frequency.setValueAtTime(8.0, now);
           lfoFMGain = audioCtx.createGain(); lfoFMGain.gain.setValueAtTime(26, now);
 
-          /* Subtle filtered noise for texture */
           noiseBuf = noiseBuf || createNoiseBuffer(audioCtx, 2.5);
           noiseSrc = audioCtx.createBufferSource(); noiseSrc.buffer = noiseBuf; noiseSrc.loop = true;
           noiseGain = audioCtx.createGain(); noiseGain.gain.setValueAtTime(prefersReducedMotion ? 0.008 : 0.03, now);
           noiseHP = audioCtx.createBiquadFilter(); noiseHP.type='highpass'; noiseHP.frequency.setValueAtTime(280, now);
           noiseLP = audioCtx.createBiquadFilter(); noiseLP.type='lowpass'; noiseLP.frequency.setValueAtTime(2200, now);
 
-          /* Routing */
           const mix = audioCtx.createGain(); mix.gain.value = 1;
           oscA.connect(mix); oscB.connect(mix); subOsc.connect(mix);
           mix.connect(preGain); preGain.connect(shaper);
@@ -269,13 +246,11 @@
 
           noiseSrc.connect(noiseHP); noiseHP.connect(noiseLP); noiseLP.connect(noiseGain); noiseGain.connect(master);
 
-          lfoAM.connect(master.gain);           // tremolo
-          lfoFM.connect(lfoFMGain); lfoFMGain.connect(oscA.frequency); // vibrato/FM
+          lfoAM.connect(master.gain);
+          lfoFM.connect(lfoFMGain); lfoFMGain.connect(oscA.frequency);
 
-          /* Start sources */
           const t0 = now; oscA.start(t0); oscB.start(t0); subOsc.start(t0); lfoAM.start(t0); lfoFM.start(t0); noiseSrc.start(t0);
 
-          /* Looping triangular sweep (up/down) within window */
           let up = true;
           function sweepTo(targetHz, dur) {
             const t = audioCtx.currentTime;
@@ -290,7 +265,6 @@
           scheduleSweep();
           sirenInterval = setInterval(scheduleSweep, halfSweep * 1000);
 
-          /* Auto stop after duration */
           sirenTimer = setTimeout(stopSiren, durationMs);
 
         } catch (e) { console.warn('Siren could not start:', e); }
@@ -317,7 +291,7 @@
         }
       }
 
-      /* Prank overlay wiring (10s, 1s fade) */
+      /* Prank overlay (10s) */
       const prankBtn = document.getElementById('do-not-click');
       const overlay = document.getElementById('prank-overlay');
       let prankTimer = null;
@@ -365,32 +339,147 @@
     })();
   </script>
 
-  <!-- Fun Fact -->
+  <!-- Fun Fact: deterministic per SYDNEY local day (AEST/AEDT), same for all visitors; expanded bank -->
   <script>
-    (function(){
-      function todayKey(){const d=new Date();try{return d.toLocaleDateString('en-CA');}catch{return d.toISOString().slice(0,10);}}
-      function pickLocalFactForDate(s,f){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return f[h%f.length];}
-      const LOCAL=[
-        "Honey never spoils—archaeologists have found edible honey in ancient Egyptian tombs.",
-        "Bananas are berries, but strawberries aren't!",
+    (function () {
+      // Build a YYYY-MM-DD date key in Australia/Sydney local time.
+      function todayKeySydney() {
+        const dtf = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Australia/Sydney',
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        });
+        // en-CA gives YYYY-MM-DD by default; but to be safe:
+        const parts = dtf.formatToParts(new Date());
+        const y = parts.find(p => p.type === 'year').value;
+        const m = parts.find(p => p.type === 'month').value;
+        const d = parts.find(p => p.type === 'day').value;
+        return `${y}-${m}-${d}`;
+      }
+      function pickFactByDate(dateStr, facts) {
+        // Simple deterministic hash of the date → index in facts
+        let hash = 0;
+        for (let i = 0; i < dateStr.length; i++) {
+          hash = (hash * 31 + dateStr.charCodeAt(i)) >>> 0;
+        }
+        return facts[hash % facts.length];
+      }
+
+      // ⭐ Expanded local fact bank (100+ general-audience facts).
+      const LOCAL_FUN_FACTS = [
+        "Honey never spoils—archaeologists found edible honey in ancient Egyptian tombs.",
+        "Bananas are berries, but strawberries aren’t.",
         "Octopuses have three hearts and blue blood.",
         "A day on Venus is longer than a year on Venus.",
-        "Koalas have fingerprints so similar to humans they can confuse crime scene analysts.",
-        "Wombats poop in cubes—yes, really.",
-        "The Eiffel Tower can be 15 cm taller in summer due to heat expansion.",
-        "Sharks existed before trees—by hundreds of millions of years.",
-        "Hot water can freeze faster than cold water (the Mpemba effect).",
-        "There are more possible chess games than atoms in the observable universe."
+        "Koalas have fingerprints almost indistinguishable from humans.",
+        "Wombats produce cube-shaped poop.",
+        "The Eiffel Tower can be ~15 cm taller in summer due to heat expansion.",
+        "Sharks existed before trees by hundreds of millions of years.",
+        "Hot water can sometimes freeze faster than cold water (the Mpemba effect).",
+        "There are more possible chess games than atoms in the observable universe.",
+        "Cows have best friends and can become stressed when separated.",
+        "Humans share ~60% of their DNA with bananas.",
+        "The shortest war on record lasted ~38 minutes (Anglo–Zanzibar War, 1896).",
+        "Some metals, like gallium, can melt in your hand.",
+        "Butterflies taste with their feet.",
+        "Sloths can hold their breath for up to 40 minutes.",
+        "A teaspoon of a neutron star would weigh billions of tons on Earth.",
+        "Polar bear fur is transparent; their skin underneath is black.",
+        "Sea otters hold hands when sleeping so they don’t drift apart.",
+        "Cats can’t taste sweetness.",
+        "Pineapples take about two years to grow a single fruit.",
+        "Cleopatra lived closer to the iPhone than to the Great Pyramids.",
+        "Tigers’ skin is striped, not just their fur.",
+        "The inventor of the Pringles can is buried in one.",
+        "Hummingbirds can fly backwards.",
+        "Jellyfish have existed for more than 500 million years.",
+        "Blue whales’ hearts can weigh as much as a small car.",
+        "Some frogs can freeze solid and thaw back to life.",
+        "Saturn would float in water (if you had a big enough tub).",
+        "Avocados are berries; raspberries are not true berries.",
+        "The Greenland shark may live 300–500 years.",
+        "Lightning can heat air to ~5× the surface of the sun.",
+        "A group of flamingos is called a flamboyance.",
+        "Mosquitoes are drawn to darker colors.",
+        "The dot over “i” and “j” is called a tittle.",
+        "Early oranges were green.",
+        "Bamboo can grow up to 90 cm (35 in) in a day.",
+        "You can hear a blue whale’s heartbeat from over 3 km away.",
+        "Some metals “remember” shapes (shape‑memory alloys).",
+        "Sea stars can regenerate lost arms; some regrow a whole body.",
+        "A single lightning bolt can contain up to a billion volts.",
+        "Kangaroos and emus rarely move backward—hence Australia’s coat of arms.",
+        "Human saliva contains a natural painkiller called opiorphin.",
+        "Bubble wrap was originally marketed as wallpaper.",
+        "Peanuts are legumes, not true nuts.",
+        "Blood is about 8% of your body weight.",
+        "Sunsets on Mars are blue because of dust scattering.",
+        "The longest “word” often cited in English names a giant protein (nicknamed Titin).",
+        "Rainbows can occur at night—called moonbows.",
+        "Corn (maize) was domesticated ~9,000 years ago in Mexico.",
+        "Glass is a rigid solid with a disordered (amorphous) atomic structure.",
+        "Antarctica is Earth’s largest desert by area.",
+        "Honeybees can learn to recognize human faces in lab tests.",
+        "A Mercury day swings by over 600°C from day to night.",
+        "Mantis shrimp can see polarized light and many more colors than humans.",
+        "Orcas are actually dolphins.",
+        "Australia is wider than the Moon’s diameter.",
+        "Platypuses are venomous—the males have spurs.",
+        "Kookaburras’ “laugh” is a territorial call.",
+        "The Great Barrier Reef is the world’s largest living structure.",
+        "Emus can sprint up to ~50 km/h.",
+        "The Sydney Harbour Bridge is nicknamed “The Coathanger.”",
+        "Uluru changes color dramatically at sunrise and sunset.",
+        "Vegemite was invented in 1922 as a Marmite substitute.",
+        "Quokkas are known for “smiling” selfies on Rottnest Island.",
+        "Australia’s pink Lake Hillier’s color is due to microalgae and bacteria.",
+        "Cassowaries are excellent swimmers as well as runners.",
+        "Wedge‑tailed eagles have wingspans over 2.5 m.",
+        "Some eucalyptus trees shed bark in long ribbons, revealing rainbow hues.",
+        "Tassie devils store fat in their tails when food is abundant.",
+        "Bilbies are nocturnal bandicoots with long rabbit‑like ears.",
+        "The lyrebird can mimic chainsaws, car alarms, and camera shutters.",
+        "Fairy penguins are the smallest penguin species and live in Australia.",
+        "The numbat can eat up to 20,000 termites a day.",
+        "The dingo’s howl can carry across great distances at night.",
+        "The Nullarbor Plain is almost entirely treeless.",
+        "A didgeridoo traditionally uses circular breathing to sustain tone.",
+        "The Australian Alps receive more annual snow than Switzerland.",
+        "The wombat’s backwards‑facing pouch keeps dirt out while digging.",
+        "A kangaroo can’t move its hind legs independently on land—but can in water.",
+        "The Bogong moth migrates hundreds of kilometres each year.",
+        "Funnel‑web spiders can survive submersion for hours by air bubbles.",
+        "Some cicadas in Australia spend years underground before emerging.",
+        "The Great Ocean Road was built by WWI veterans.",
+        "Birds in the outback sometimes spread wildfires by carrying burning sticks.",
+        "The Queensland lungfish can survive out of water in moist mud.",
+        "Numbats are one of the few marsupials that are strictly diurnal.",
+        "The Tasmanian tiger (thylacine) went extinct in the 20th century.",
+        "The frilled lizard displays a dramatic neck frill when threatened.",
+        "The quoll is a carnivorous marsupial with spotted fur.",
+        "Australia has more than 10,000 beaches—you could visit one a day for decades.",
+        "The Southern Cross constellation appears on the Australian flag.",
+        "The emu and kangaroo were chosen to symbolize progress (rarely move backward).",
+        "The Sydney Opera House roof has over a million tiles.",
+        "Koalas sleep up to 20 hours a day due to their low‑energy diet.",
+        "Some Aussie spiders “balloon” through the air on silk threads.",
+        "Australian magpies can recognize and remember human faces.",
+        "The bowerbird decorates its bower with blue trinkets to attract mates.",
+        "The Yabby is a freshwater crayfish common in farm dams.",
+        "The cassowary’s casque may help with sound reception and bush bashing.",
+        "The sugar glider is a small gliding possum that can glide ~50 m.",
+        "Echidnas have electroreceptors on their snouts to sense prey.",
+        "The reef stonefish is one of the world’s most venomous fish.",
+        "The ocean sunfish (mola) can weigh over 1,000 kg.",
+        "Fireflies are rare in most of Australia but occur in pockets along the east coast.",
+        "The leaf insect’s camouflage mimics leaf veins and even leaf damage.",
+        "Killer whales have been spotted preying on great white sharks off Australia.",
+        "Some corals can spawn together, syncing with lunar cycles."
       ];
-      const FACT=document.getElementById('fun-fact-text');
-      const BTN=document.getElementById('fun-fact-refresh');
-      const KTXT='funFactText',KDATE='funFactDate',KSRC='funFactSource',KLINK='funFactLink';
-      async function fetchWeb(){const r=await fetch('https://uselessfacts.jsph.pl/random.json?language=en',{cache:'no-store'});if(!r.ok)throw new Error('bad');const d=await r.json();return{fact:(d&&d.text?String(d.text).trim():''),source:(d&&(d.source||d.source_url||d.permalink))?String(d.source||d.source_url||d.permalink):'',link:(d&&(d.source_url||d.permalink))?String(d.source_url||d.permalink):''};}
-      function show({fact},today){FACT.textContent=fact;localStorage.setItem(KTXT,fact);localStorage.setItem(KDATE,today);localStorage.setItem(KSRC,'');localStorage.setItem(KLINK,'');}
-      async function load(force=false){if(!FACT)return;const today=todayKey();const sd=localStorage.getItem(KDATE),st=localStorage.getItem(KTXT);if(!force&&sd===today&&st){show({fact:st},today);return;}
-        try{const web=await fetchWeb();if(web.fact){show(web,today);return;}throw new Error();}catch{const fb=pickLocalFactForDate(today,LOCAL);show({fact:fb},today);}
-      }
-      if(BTN) BTN.addEventListener('click',()=>load(true)); load();
+
+      const FACT_EL = document.getElementById('fun-fact-text');
+      const today = todayKeySydney();
+      const fact = pickFactByDate(today, LOCAL_FUN_FACTS);
+      if (FACT_EL) FACT_EL.textContent = fact;
     })();
   </script>
 
@@ -423,7 +512,7 @@
         const fs=Math.max(56,Math.min(180,Math.floor(W*0.11))), x=W/2, y=Math.max(H*0.27,H*0.33), col=rc();
         add({k:'text',t,x,y,c:col,al:1,d:0.012,fs,life:140});
         const R=Math.min(W,H)*0.16, N=12;
-        for(let i=0;i<N;i++){const a=(Math.PI*2)*(i/N);
+        for (let i=0;i<N;i++){ const a=(Math.PI*2)*(i/N);
           explode(x+Math.cos(a)*R, y+Math.sin(a)*R, {n:14, sm:1.6, sx:3.4, c:col});
         }
       }
@@ -516,4 +605,3 @@
   </script>
 </body>
 </html>
-``
